@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   CalendarDays,
   BarChart3,
+  Tag,
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { IconBadge } from './IconBadge';
@@ -55,6 +56,7 @@ interface ReportData {
   grossProfitUSD: number;
   grossProfitKHR: number;
   costedItemCount: number;
+  expenseByCategory: { name: string; color: string | null; amountUSD: number; amountKHR: number }[];
 }
 
 const EMPTY_REPORT: ReportData = {
@@ -77,6 +79,7 @@ const EMPTY_REPORT: ReportData = {
   grossProfitUSD: 0,
   grossProfitKHR: 0,
   costedItemCount: 0,
+  expenseByCategory: [],
 };
 
 function pad(n: number) {
@@ -123,7 +126,7 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
       const [txRes, invRes, movRes, prodRes, itemsRes] = await Promise.all([
         supabase
           .from('transactions')
-          .select('type, currency, amount, transaction_date')
+          .select('type, currency, amount, transaction_date, category_id, transaction_categories(id, name, color)')
           .gte('transaction_date', start)
           .lte('transaction_date', end),
         supabase
@@ -150,7 +153,13 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
 
       if (cancelled) return;
 
-      const tx = (txRes.data as { type: string; currency: string; amount: number }[]) || [];
+      const tx = (txRes.data as unknown as {
+        type: string;
+        currency: string;
+        amount: number;
+        category_id: string | null;
+        transaction_categories: { id: string; name: string; color: string | null } | null;
+      }[]) || [];
       const inv =
         (invRes.data as {
           subtotal: number;
@@ -185,6 +194,18 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
 
       const low = prod.filter((p) => Number(p.quantity) <= Number(p.low_stock_threshold));
 
+      const catMap = new Map<string, { name: string; color: string | null; amountUSD: number; amountKHR: number }>();
+      for (const t of tx) {
+        if (t.type !== 'expense' || !t.category_id || !t.transaction_categories) continue;
+        const key = t.category_id;
+        if (!catMap.has(key))
+          catMap.set(key, { name: t.transaction_categories.name, color: t.transaction_categories.color, amountUSD: 0, amountKHR: 0 });
+        const row = catMap.get(key)!;
+        if (t.currency === 'USD') row.amountUSD += Number(t.amount);
+        else row.amountKHR += Number(t.amount);
+      }
+      const expenseByCategory = Array.from(catMap.values()).sort((a, b) => b.amountUSD + b.amountKHR - (a.amountUSD + a.amountKHR));
+
       setData({
         incomeUSD: sum(tx, 'income', 'USD'),
         incomeKHR: sum(tx, 'income', 'KHR'),
@@ -205,6 +226,7 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
         grossProfitUSD: grossProfit('USD'),
         grossProfitKHR: grossProfit('KHR'),
         costedItemCount: costedItems.length,
+        expenseByCategory,
       });
       setLoading(false);
     };
@@ -457,6 +479,32 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
                     </span>
                     <span style={{ color: COLORS.danger, fontWeight: 700, ...latinFont }}>
                       {p.quantity} {p.unit}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {data.expenseByCategory.length > 0 && (
+              <div className="bg-white rounded-2xl p-3.5 mb-4" style={{ boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <IconBadge icon={Tag} size={INLINE} tint="danger" shape="rounded" />
+                  <p className="text-xs font-bold" style={{ color: COLORS.navy }}>
+                    {tr('ចំណាយតាមប្រភេទ', 'Expenses by Category')}
+                  </p>
+                </div>
+                {data.expenseByCategory.map((c, i) => (
+                  <div
+                    key={`${c.name}-${i}`}
+                    className="flex justify-between items-center text-[11px] py-1.5"
+                    style={{ borderTop: i > 0 ? `1px solid ${COLORS.border}` : 'none' }}
+                  >
+                    <span className="flex items-center gap-1.5" style={{ color: COLORS.navy }}>
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.color || COLORS.danger }} />
+                      {c.name}
+                    </span>
+                    <span style={{ color: COLORS.danger, fontWeight: 700, ...latinFont }}>
+                      {formatMoney(c.amountUSD, c.amountKHR)}
                     </span>
                   </div>
                 ))}

@@ -35,6 +35,7 @@ import {
   ArrowDownRight,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { Users, Tag } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 import { IconBadge } from './components/IconBadge';
 import InvoiceScreen from './components/InvoiceScreen';
@@ -43,6 +44,8 @@ import InvoiceOverview from './components/InvoiceOverview';
 import StockScreen from './components/StockScreen';
 import AccountScreen from './components/AccountScreen';
 import ReportScreen from './components/ReportScreen';
+import CustomerScreen from './components/CustomerScreen';
+import CategoryScreen from './components/CategoryScreen';
 import { COLORS, khmerFont, latinFont, DEFAULT_UNITS } from './lib/theme';
 import InstallScreen from './components/InstallScreen';
 import FeatureBanner from './components/FeatureBanner';
@@ -60,7 +63,7 @@ const TRIAL_DAYS = 30;
 
 const phoneToEmail = (digits: string) => `${digits}@khinvoice.app`;
 
-type Screen = 'Install' | 'SignIn' | 'SignUp' | 'Home' | 'Finance' | 'InvoiceOverview' | 'Invoice' | 'Stock' | 'Account' | 'Report';
+type Screen = 'Install' | 'SignIn' | 'SignUp' | 'Home' | 'Finance' | 'InvoiceOverview' | 'Invoice' | 'Stock' | 'Account' | 'Report' | 'Customer' | 'Category';
 
 interface Profile {
   id: string;
@@ -89,6 +92,7 @@ interface Transaction {
   created_at: string;
   source?: 'manual' | 'invoice' | 'stock';
   reference_id?: string | null;
+  category_id?: string | null;
 }
 
 function toE164Digits(input: string) {
@@ -191,6 +195,8 @@ export default function App() {
   const [showSubscription, setShowSubscription] = useState(false);
   const [showTips, setShowTips] = useState(false);
   const [customUnits, setCustomUnits] = useState<string[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string; type: 'income' | 'expense'; color: string | null }[]>([]);
+  const [addCategoryId, setAddCategoryId] = useState<string>('');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addType, setAddType] = useState<'income' | 'expense'>('income');
   const [addDescription, setAddDescription] = useState('');
@@ -305,6 +311,14 @@ export default function App() {
     if (!error) setCustomUnits((data || []).map((u: { name: string }) => u.name));
   };
 
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from('transaction_categories')
+      .select('id, name, type, color')
+      .order('name');
+    if (!error) setCategories((data || []) as typeof categories);
+  };
+
   const fetchHomeCounts = async () => {
     const now = new Date();
     const mStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
@@ -327,6 +341,7 @@ export default function App() {
     if (currentScreen === 'Home' || currentScreen === 'Finance') {
       fetchTransactions();
       fetchCustomUnits();
+      fetchCategories();
     }
     if (currentScreen === 'Home') {
       fetchHomeCounts();
@@ -335,6 +350,7 @@ export default function App() {
 
   const openAddModal = (type: 'income' | 'expense') => {
     setAddType(type);
+    setAddCategoryId('');
     setAddDescription('');
     setAddQuantity('1');
     setAddUnit(DEFAULT_UNITS[0]);
@@ -388,6 +404,7 @@ export default function App() {
       unit_price: price,
       currency: addCurrency,
       transaction_date: addDate,
+      category_id: addCategoryId || null,
     });
     setAddBusy(false);
     if (error) {
@@ -726,6 +743,21 @@ export default function App() {
             ៛ KHR
           </button>
         </div>
+
+        <label className="text-xs font-semibold block mb-1.5" style={{ color: COLORS.navy }}>
+          {lang === 'KH' ? 'ប្រភេទ' : 'Category'}
+        </label>
+        <select
+          value={addCategoryId}
+          onChange={(e) => setAddCategoryId(e.target.value)}
+          className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none mb-3"
+          style={{ borderColor: COLORS.border, backgroundColor: '#FAFAF8', color: COLORS.navy }}
+        >
+          <option value="">{lang === 'KH' ? '— គ្មានប្រភេទ —' : '— No category —'}</option>
+          {categories.filter((c) => c.type === addType).map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
 
         <label className="text-xs font-semibold block mb-1.5" style={{ color: COLORS.navy }}>
           {lang === 'KH' ? 'ថ្ងៃទី' : 'Date'}
@@ -1814,6 +1846,24 @@ export default function App() {
                   {lang === 'KH' ? 'របាយការណ៍' : 'Report'}
                 </span>
               </button>
+              <button
+                onClick={() => setCurrentScreen('Customer')}
+                className="flex flex-col items-center flex-1"
+              >
+                <IconBadge icon={Users} size={ACTION} tint="invoice" shape="rounded" />
+                <span className="text-xs mt-1.5" style={{ color: COLORS.navy }}>
+                  {lang === 'KH' ? 'អតិថិជន' : 'Customer'}
+                </span>
+              </button>
+              <button
+                onClick={() => setCurrentScreen('Category')}
+                className="flex flex-col items-center flex-1"
+              >
+                <IconBadge icon={Tag} size={ACTION} tint="gold" shape="rounded" />
+                <span className="text-xs mt-1.5" style={{ color: COLORS.navy }}>
+                  {lang === 'KH' ? 'ប្រភេទ' : 'Category'}
+                </span>
+              </button>
             </div>
 
             {/* Recent Transactions — short preview only; tap "see all"
@@ -2476,6 +2526,20 @@ export default function App() {
          ============================================ */}
       {currentScreen === 'Report' && profile && (
         <ReportScreen lang={lang} profile={profile} onBack={() => setCurrentScreen('Home')} />
+      )}
+
+      {/* ============================================
+         CUSTOMER
+         ============================================ */}
+      {currentScreen === 'Customer' && profile && (
+        <CustomerScreen lang={lang} onBack={() => setCurrentScreen('Home')} />
+      )}
+
+      {/* ============================================
+         CATEGORY
+         ============================================ */}
+      {currentScreen === 'Category' && profile && (
+        <CategoryScreen lang={lang} onBack={() => setCurrentScreen('Home')} />
       )}
 
       {showSubscription && profile && (

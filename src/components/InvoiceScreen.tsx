@@ -84,6 +84,8 @@ export default function InvoiceScreen({ lang, profile, onBack, editInvoiceId }: 
   const [products, setProducts] = useState<Product[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [customerId, setCustomerId] = useState<string | null>(null);
+  const [customers, setCustomers] = useState<{ id: string; name: string; phone: string | null }[]>([]);
   const [invoiceDate, setInvoiceDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [dueDate, setDueDate] = useState('');
   const [currency, setCurrency] = useState<'USD' | 'KHR'>('USD');
@@ -138,6 +140,13 @@ export default function InvoiceScreen({ lang, profile, onBack, editInvoiceId }: 
       .then(({ data, error }) => {
         if (!error) setProducts((data as Product[]) || []);
       });
+    supabase
+      .from('customers')
+      .select('id, name, phone')
+      .order('name')
+      .then(({ data, error }) => {
+        if (!error) setCustomers((data || []) as typeof customers);
+      });
   }, []);
 
   const selectProductForItem = (itemId: string, productId: string) => {
@@ -184,6 +193,7 @@ export default function InvoiceScreen({ lang, profile, onBack, editInvoiceId }: 
       setInvoiceNumber(inv.invoice_number);
       setCustomerName(inv.customer_name || '');
       setCustomerPhone(inv.customer_phone || '');
+      setCustomerId(inv.customer_id || null);
       setInvoiceDate(inv.invoice_date || new Date().toISOString().slice(0, 10));
       setDueDate(inv.due_date || '');
       setCurrency(inv.currency || 'USD');
@@ -291,6 +301,7 @@ export default function InvoiceScreen({ lang, profile, onBack, editInvoiceId }: 
     const invoicePayload = {
       customer_name: customerName.trim(),
       customer_phone: customerPhone.trim() || null,
+      customer_id: customerId,
       invoice_date: invoiceDate,
       due_date: dueDate || null,
       subtotal,
@@ -589,11 +600,28 @@ export default function InvoiceScreen({ lang, profile, onBack, editInvoiceId }: 
                   </div>
                   <input
                     value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
+                    onChange={(e) => {
+                      setCustomerName(e.target.value);
+                      const match = customers.find((c) => c.name === e.target.value);
+                      if (match) {
+                        setCustomerId(match.id);
+                        if (match.phone) setCustomerPhone(match.phone);
+                      } else {
+                        setCustomerId(null);
+                      }
+                    }}
+                    list="customer-list"
                     placeholder={tr('ឈ្មោះអតិថិជន', 'Customer name')}
                     className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none mb-2"
                     style={inputStyle}
                   />
+                  <datalist id="customer-list">
+                    {customers.map((c) => (
+                      <option key={c.id} value={c.name}>
+                        {c.phone || ''}
+                      </option>
+                    ))}
+                  </datalist>
                   <input
                     type="tel"
                     value={customerPhone}
