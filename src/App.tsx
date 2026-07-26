@@ -93,6 +93,7 @@ interface Transaction {
   source?: 'manual' | 'invoice' | 'stock';
   reference_id?: string | null;
   category_id?: string | null;
+  transaction_categories?: { id: string; name: string; color: string | null } | null;
 }
 
 function toE164Digits(input: string) {
@@ -212,6 +213,8 @@ export default function App() {
 
   const [financeRange, setFinanceRange] = useState<'today' | 'month' | 'year' | 'custom'>('today');
   const [financeCurrency, setFinanceCurrency] = useState<'all' | 'USD' | 'KHR'>('all');
+  const [financeCategoryFilter, setFinanceCategoryFilter] = useState<string>('all');
+  const [financeShowCatBreakdown, setFinanceShowCatBreakdown] = useState(true);
   const [financeCustomStart, setFinanceCustomStart] = useState(() =>
     new Date().toISOString().slice(0, 10)
   );
@@ -294,7 +297,7 @@ export default function App() {
     setTransactionsLoading(true);
     const { data, error } = await supabase
       .from('transactions')
-      .select('*')
+      .select('*, transaction_categories(id, name, color)')
       .order('transaction_date', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(50);
@@ -489,11 +492,32 @@ export default function App() {
         (t) =>
           t.transaction_date >= rangeStart &&
           t.transaction_date <= rangeEnd &&
-          (financeCurrency === 'all' || t.currency === financeCurrency)
+          (financeCurrency === 'all' || t.currency === financeCurrency) &&
+          (financeCategoryFilter === 'all' || t.category_id === financeCategoryFilter)
       ),
-    [transactions, rangeStart, rangeEnd, financeCurrency]
+    [transactions, rangeStart, rangeEnd, financeCurrency, financeCategoryFilter]
   );
   const rangeTotals = useMemo(() => computeTotals(filteredTransactions), [filteredTransactions]);
+
+  const categoryBreakdown = useMemo(() => {
+    const map = new Map<string, { name: string; color: string | null; incomeUSD: number; incomeKHR: number; expenseUSD: number; expenseKHR: number; count: number }>();
+    for (const t of filteredTransactions) {
+      const key = t.category_id || 'uncategorized';
+      const catName = t.transaction_categories?.name || (lang === 'KH' ? 'គ្មានប្រភេទ' : 'Uncategorized');
+      const catColor = t.transaction_categories?.color || null;
+      if (!map.has(key)) map.set(key, { name: catName, color: catColor, incomeUSD: 0, incomeKHR: 0, expenseUSD: 0, expenseKHR: 0, count: 0 });
+      const row = map.get(key)!;
+      row.count++;
+      if (t.type === 'income') {
+        if (t.currency === 'USD') row.incomeUSD += Number(t.amount);
+        else row.incomeKHR += Number(t.amount);
+      } else {
+        if (t.currency === 'USD') row.expenseUSD += Number(t.amount);
+        else row.expenseKHR += Number(t.amount);
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => (b.expenseUSD + b.expenseKHR + b.incomeUSD + b.incomeKHR) - (a.expenseUSD + a.expenseKHR + a.incomeUSD + a.incomeKHR));
+  }, [filteredTransactions, lang]);
 
   const balanceUSD = incomeUSD - expenseUSD;
   const balanceKHR = incomeKHR - expenseKHR;
@@ -2258,10 +2282,10 @@ export default function App() {
               ].map((r) => (
                 <button
                   key={r.key}
-                  onClick={() => setFinanceRange(r.key)}
-                  className="flex-1 py-2 rounded-lg border text-xs font-bold"
+                  onClick={() => { setFinanceRange(r.key); setFinanceCategoryFilter('all'); }}
+                  className="flex-1 py-2 rounded-lg border text-xs font-bold transition-colors"
                   style={{
-                    borderColor: COLORS.border,
+                    borderColor: financeRange === r.key ? COLORS.navy : COLORS.border,
                     backgroundColor: financeRange === r.key ? COLORS.navy : '#FFFFFF',
                     color: financeRange === r.key ? '#FFFFFF' : COLORS.navy,
                   }}
@@ -2287,6 +2311,87 @@ export default function App() {
                   className="flex-1 rounded-lg border px-3 py-2 text-xs outline-none"
                   style={{ borderColor: COLORS.border, backgroundColor: '#FFFFFF', color: COLORS.navy }}
                 />
+              </div>
+            )}
+
+            {/* Category breakdown — shows income/expense grouped by category for the selected range */}
+            {financeShowCatBreakdown && categoryBreakdown.length > 0 && (
+              <div className="mt-4 bg-white rounded-2xl p-3.5" style={{ boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}>
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <IconBadge icon={Tag} size={INLINE} tint="navy" shape="rounded" />
+                    <p className="text-xs font-bold" style={{ color: COLORS.navy }}>
+                      {lang === 'KH' ? 'សង្ខេបតាមប្រភេទ' : 'By Category'}
+                    </p>
+                  </div>
+                  <button onClick={() => setFinanceShowCatBreakdown(false)} className="text-[10px]" style={{ color: COLORS.muted }}>
+                    {lang === 'KH' ? 'បិទ' : 'Hide'}
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {categoryBreakdown.slice(0, 6).map((c, i) => {
+                    const total = c.incomeUSD + c.incomeKHR + c.expenseUSD + c.expenseKHR;
+                    const maxTotal = categoryBreakdown[0] ? (categoryBreakdown[0].incomeUSD + categoryBreakdown[0].incomeKHR + categoryBreakdown[0].expenseUSD + categoryBreakdown[0].expenseKHR) : 1;
+                    const pct = Math.max(2, Math.round((total / maxTotal) * 100));
+                    return (
+                      <div key={i}>
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: COLORS.navy }}>
+                            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: c.color || COLORS.muted }} />
+                            {c.name}
+                            <span className="text-[9px] font-normal" style={{ color: COLORS.muted }}>({c.count})</span>
+                          </span>
+                          <span className="text-[11px] font-bold" style={{ color: COLORS.navy, ...latinFont }}>
+                            {formatMoney(c.incomeUSD - c.expenseUSD, c.incomeKHR - c.expenseKHR)}
+                          </span>
+                        </div>
+                        <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: COLORS.border }}>
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: c.color || COLORS.navy }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {!financeShowCatBreakdown && categoryBreakdown.length > 0 && (
+              <button onClick={() => setFinanceShowCatBreakdown(true)} className="mt-4 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border text-xs font-bold" style={{ borderColor: COLORS.border, color: COLORS.navy, backgroundColor: '#FFFFFF' }}>
+                <Tag size={13} color={COLORS.navy} strokeWidth={2.2} />
+                {lang === 'KH' ? 'បង្ហាញសង្ខេបតាមប្រភេទ' : 'Show Category Breakdown'}
+              </button>
+            )}
+
+            {/* Category filter chips — horizontal scroll */}
+            {categories.length > 0 && (
+              <div className="mt-3 -mx-3.5 px-3.5 overflow-x-auto app-scroll" style={{ scrollbarWidth: 'none' }}>
+                <div className="flex gap-1.5 pb-1" style={{ width: 'max-content' }}>
+                  <button
+                    onClick={() => setFinanceCategoryFilter('all')}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-colors"
+                    style={{
+                      backgroundColor: financeCategoryFilter === 'all' ? COLORS.navy : '#FFFFFF',
+                      color: financeCategoryFilter === 'all' ? '#FFFFFF' : COLORS.navy,
+                      border: `1px solid ${financeCategoryFilter === 'all' ? COLORS.navy : COLORS.border}`,
+                    }}
+                  >
+                    {lang === 'KH' ? 'ទាំងអស់' : 'All'}
+                  </button>
+                  {categories.map((c) => (
+                    <button
+                      key={c.id}
+                      onClick={() => setFinanceCategoryFilter(financeCategoryFilter === c.id ? 'all' : c.id)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-colors"
+                      style={{
+                        backgroundColor: financeCategoryFilter === c.id ? (c.color || COLORS.navy) : '#FFFFFF',
+                        color: financeCategoryFilter === c.id ? '#FFFFFF' : COLORS.navy,
+                        border: `1px solid ${financeCategoryFilter === c.id ? (c.color || COLORS.navy) : COLORS.border}`,
+                      }}
+                    >
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.color || COLORS.muted }} />
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -2344,7 +2449,7 @@ export default function App() {
               {filteredTransactions.map((tItem, i) => (
                 <div
                   key={tItem.id}
-                  className="flex items-center px-3 py-2"
+                  className="flex items-center px-3 py-2.5"
                   style={{
                     borderBottom: i < filteredTransactions.length - 1 ? `1px solid ${COLORS.border}` : 'none',
                   }}
@@ -2352,10 +2457,22 @@ export default function App() {
                   <span className="text-[11px] flex-[1.2]" style={{ color: COLORS.navy, ...latinFont }}>
                     {tItem.transaction_date}
                   </span>
-                  <div className="flex-[2] pr-1">
+                  <div className="flex-[2] pr-1 min-w-0">
                     <p className="text-[11px] font-semibold truncate" style={{ color: COLORS.navy }}>
                       {tItem.description}
                     </p>
+                    {tItem.transaction_categories && (
+                      <span
+                        className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                        style={{
+                          backgroundColor: (tItem.transaction_categories.color || COLORS.muted) + '20',
+                          color: tItem.transaction_categories.color || COLORS.muted,
+                        }}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tItem.transaction_categories.color || COLORS.muted }} />
+                        {tItem.transaction_categories.name}
+                      </span>
+                    )}
                   </div>
                   <span className="text-[11px] flex-1 text-center" style={{ color: COLORS.muted }}>
                     {tItem.quantity} {tItem.unit}
@@ -2439,10 +2556,22 @@ export default function App() {
                       <span className="text-[11px] flex-[1.2]" style={{ color: COLORS.navy, ...latinFont }}>
                         {tItem.transaction_date}
                       </span>
-                      <div className="flex-[2] pr-1">
+                      <div className="flex-[2] pr-1 min-w-0">
                         <p className="text-[11px] font-semibold truncate" style={{ color: COLORS.navy }}>
                           {tItem.description}
                         </p>
+                        {tItem.transaction_categories && (
+                          <span
+                            className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                            style={{
+                              backgroundColor: (tItem.transaction_categories.color || COLORS.muted) + '20',
+                              color: tItem.transaction_categories.color || COLORS.muted,
+                            }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tItem.transaction_categories.color || COLORS.muted }} />
+                            {tItem.transaction_categories.name}
+                          </span>
+                        )}
                       </div>
                       <span className="text-[11px] flex-1 text-center" style={{ color: COLORS.muted }}>
                         {tItem.quantity} {tItem.unit}
