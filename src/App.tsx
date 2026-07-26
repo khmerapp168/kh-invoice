@@ -1066,36 +1066,38 @@ export default function App() {
          ============================================ */}
       {currentScreen === 'SignIn' && (
         <div
-          className="flex flex-col justify-center items-center p-4 min-h-[85vh]"
+          className="h-[100dvh] w-full overflow-y-auto app-scroll flex flex-col items-center justify-center px-4"
           style={{
+            paddingTop: 'max(0.75rem, env(safe-area-inset-top))',
+            paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))',
             background: `radial-gradient(120% 90% at 50% 0%, ${COLORS.navyTint} 0%, ${COLORS.bgApp} 60%, ${COLORS.bgApp} 100%)`,
           }}
         >
-          {/* Logo — no card, big and centered, description below */}
-          <div className="flex flex-col items-center mt-2 mb-1">
+          {/* Logo — compact, no card, description below */}
+          <div className="flex flex-col items-center flex-shrink-0">
             <div
-              className="rounded-[30px] flex items-center justify-center relative"
+              className="rounded-[22px] flex items-center justify-center relative"
               style={{
-                width: 132,
-                height: 132,
+                width: 76,
+                height: 76,
                 background: `linear-gradient(150deg, #FFFFFF 0%, ${COLORS.navyTint} 100%)`,
-                boxShadow: '0 14px 32px rgba(12,68,124,0.18)',
+                boxShadow: '0 10px 22px rgba(12,68,124,0.18)',
               }}
             >
               <img
                 src={logoIcon}
                 alt="KH Invoice"
-                className="w-[92px] h-[92px] object-contain"
+                className="w-[52px] h-[52px] object-contain"
               />
             </div>
             <span
-              className="text-[28px] font-extrabold tracking-wide mt-3"
+              className="text-lg font-extrabold tracking-wide mt-2"
               style={{ color: COLORS.navy, ...latinFont }}
             >
               KH INVOICE
             </span>
             <span
-              className="text-xs text-center mt-1 leading-relaxed max-w-[260px]"
+              className="text-[11px] text-center mt-0.5 leading-relaxed max-w-[260px]"
               style={{ color: COLORS.muted }}
             >
               {t.tagline}
@@ -1103,22 +1105,24 @@ export default function App() {
           </div>
 
           {/* Auto-play feature highlights — same visual language as the Home banner */}
-          <AuthFeatureCarousel lang={lang} />
+          <div className="w-full max-w-sm flex-shrink-0 mt-2.5">
+            <AuthFeatureCarousel lang={lang} compact />
+          </div>
 
           <div
-            className="w-full max-w-sm rounded-3xl overflow-hidden bg-white mt-4"
+            className="w-full max-w-sm rounded-2xl overflow-hidden bg-white mt-2.5 flex-shrink-0"
             style={{ boxShadow: '0 10px 28px rgba(24,41,62,0.10)', border: `1px solid ${COLORS.border}` }}
           >
-            <div className="p-6">
-              <h2 className="text-lg font-bold" style={{ color: COLORS.navy }}>
+            <div className="p-4">
+              <h2 className="text-base font-bold" style={{ color: COLORS.navy }}>
                 {t.login}
               </h2>
-              <p className="text-xs mb-3" style={{ color: COLORS.muted }}>
+              <p className="text-[11px] mb-2.5" style={{ color: COLORS.muted }}>
                 {lang === 'KH' ? 'សូមបញ្ចូលលេខទូរស័ព្ទ និងលេខសម្ងាត់របស់អ្នក' : 'Please input your credentials'}
               </p>
 
               <label
-                className="text-xs font-semibold block mt-2 mb-1.5"
+                className="text-xs font-semibold block mb-1"
                 style={{ color: COLORS.navy }}
               >
                 {t.phone}
@@ -1128,7 +1132,7 @@ export default function App() {
                 inputMode="numeric"
                 value={signInPhone}
                 onChange={(e) => setSignInPhone(formatKhmerPhoneDisplay(e.target.value))}
-                className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
+                className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
                 style={{
                   borderColor: COLORS.border,
                   backgroundColor: '#FAFAF8',
@@ -1138,7 +1142,7 @@ export default function App() {
               />
 
               <label
-                className="text-xs font-semibold block mt-3 mb-1.5"
+                className="text-xs font-semibold block mt-2.5 mb-1"
                 style={{ color: COLORS.navy }}
               >
                 {t.password}
@@ -1152,7 +1156,7 @@ export default function App() {
                   placeholder="••••••••"
                   value={signInPassword}
                   onChange={(e) => setSignInPassword(e.target.value)}
-                  className="flex-1 px-3 py-2.5 text-sm outline-none bg-transparent"
+                  className="flex-1 px-3 py-2 text-sm outline-none bg-transparent"
                   style={{ color: COLORS.navy, ...latinFont }}
                 />
                 <button onClick={() => setShowSignInPassword(!showSignInPassword)}>
@@ -1166,7 +1170,7 @@ export default function App() {
 
               {signInError && (
                 <div
-                  className="mt-3 p-2.5 rounded-lg border text-xs"
+                  className="mt-2.5 p-2 rounded-lg border text-xs"
                   style={{ backgroundColor: COLORS.dangerTint, borderColor: '#F4A8A0', color: COLORS.danger }}
                 >
                   {signInError}
@@ -1176,7 +1180,7 @@ export default function App() {
               <button
                 onClick={handleSignInSubmit}
                 disabled={signInBusy}
-                className="w-full mt-4 py-3 rounded-lg font-bold text-white text-sm disabled:opacity-60"
+                className="w-full mt-3 py-2.5 rounded-lg font-bold text-white text-sm disabled:opacity-60"
                 style={{ backgroundColor: COLORS.gold, boxShadow: `0 3px 5px ${COLORS.gold}33` }}
               >
                 {signInBusy
@@ -1188,7 +1192,7 @@ export default function App() {
 
               <button
                 onClick={() => setCurrentScreen('SignUp')}
-                className="w-full mt-3 text-center text-xs"
+                className="w-full mt-2.5 text-center text-xs"
                 style={{ color: COLORS.muted }}
               >
                 {lang === 'KH' ? 'មិនមានគណនី? ' : "Don't have account? "}
@@ -1199,7 +1203,7 @@ export default function App() {
 
               <button
                 onClick={openTelegram}
-                className="w-full mt-5 pt-3 border-t text-xs font-semibold flex items-center justify-center gap-1.5"
+                className="w-full mt-3 pt-2.5 border-t text-xs font-semibold flex items-center justify-center gap-1.5"
                 style={{ borderColor: COLORS.border, color: COLORS.goldDark }}
               >
                 <Send size={INLINE} color={COLORS.goldDark} strokeWidth={2} />
@@ -1208,7 +1212,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="w-full max-w-sm text-center mt-4">
+          <div className="w-full max-w-sm text-center mt-2.5 flex-shrink-0">
             <p className="text-[10px] font-medium" style={{ color: COLORS.muted }}>
               Build By: Pang Sokheng
             </p>
@@ -1224,72 +1228,80 @@ export default function App() {
          ============================================ */}
       {currentScreen === 'SignUp' && (
         <div
-          className="flex flex-col justify-center items-center p-4 min-h-[85vh]"
+          className="h-[100dvh] w-full overflow-y-auto app-scroll flex flex-col items-center justify-center px-4"
           style={{
+            paddingTop: 'max(0.75rem, env(safe-area-inset-top))',
+            paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))',
             background: `radial-gradient(120% 90% at 50% 0%, ${COLORS.navyTint} 0%, ${COLORS.bgApp} 60%, ${COLORS.bgApp} 100%)`,
           }}
         >
-          {/* Logo — no card, big and centered, description below */}
-          <div className="flex flex-col items-center mt-2 mb-1">
+          {/* Logo — compact, no card, description below */}
+          <div className="flex flex-col items-center flex-shrink-0">
             <div
-              className="rounded-[26px] flex items-center justify-center relative"
+              className="rounded-[22px] flex items-center justify-center relative"
               style={{
-                width: 108,
-                height: 108,
+                width: 76,
+                height: 76,
                 background: `linear-gradient(150deg, #FFFFFF 0%, ${COLORS.navyTint} 100%)`,
-                boxShadow: '0 12px 28px rgba(12,68,124,0.18)',
+                boxShadow: '0 10px 22px rgba(12,68,124,0.18)',
               }}
             >
               <img
                 src={logoIcon}
                 alt="KH Invoice"
-                className="w-[76px] h-[76px] object-contain"
+                className="w-[52px] h-[52px] object-contain"
               />
             </div>
             <span
-              className="text-2xl font-extrabold tracking-wide mt-3"
+              className="text-lg font-extrabold tracking-wide mt-2"
               style={{ color: COLORS.navy, ...latinFont }}
             >
               KH INVOICE
             </span>
             <span
-              className="text-xs text-center mt-1 leading-relaxed max-w-[260px]"
+              className="text-[11px] text-center mt-0.5 leading-relaxed max-w-[260px]"
               style={{ color: COLORS.muted }}
             >
               {t.tagline}
             </span>
           </div>
 
+          {/* Auto-play feature highlights — same visual language as Sign In */}
+          <div className="w-full max-w-sm flex-shrink-0 mt-2.5">
+            <AuthFeatureCarousel lang={lang} compact />
+          </div>
+
           <div
-            className="w-full max-w-sm rounded-3xl overflow-hidden bg-white mt-4"
+            className="w-full max-w-sm rounded-2xl overflow-hidden bg-white mt-2.5 flex-shrink-0"
             style={{ boxShadow: '0 10px 28px rgba(24,41,62,0.10)', border: `1px solid ${COLORS.border}` }}
           >
-            <div className="flex items-center justify-center gap-2 pt-5">
+            <div className="flex items-center justify-center gap-2 pt-4">
               <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold transition-colors"
+                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[11px] font-bold transition-colors"
                 style={{ backgroundColor: COLORS.navy }}
               >
                 1
               </div>
               <div
-                className="w-14 h-0.5 rounded-full transition-colors"
+                className="w-12 h-0.5 rounded-full transition-colors"
                 style={{ backgroundColor: signUpStep === 2 ? COLORS.navy : COLORS.border }}
               />
               <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold transition-colors"
+                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[11px] font-bold transition-colors"
                 style={{ backgroundColor: signUpStep === 2 ? COLORS.navy : COLORS.border, color: signUpStep === 2 ? '#FFFFFF' : COLORS.muted }}
               >
                 2
               </div>
             </div>
 
-            <div className="p-6">              {signUpStep === 1 ? (
+            <div className="p-4">
+              {signUpStep === 1 ? (
                 <div>
-                  <h2 className="text-lg font-bold mb-3" style={{ color: COLORS.navy }}>
+                  <h2 className="text-base font-bold mb-2.5" style={{ color: COLORS.navy }}>
                     {lang === 'KH' ? 'ព័ត៌មានអាជីវកម្ម' : 'Business Info'}
                   </h2>
                   <label
-                    className="text-xs font-semibold block mb-1.5"
+                    className="text-xs font-semibold block mb-1"
                     style={{ color: COLORS.navy }}
                   >
                     {t.bizName}
@@ -1298,12 +1310,12 @@ export default function App() {
                     placeholder={lang === 'KH' ? 'ឧ. ហាងកាហ្វេ ដានី' : 'e.g. Dany Cafe'}
                     value={bizName}
                     onChange={(e) => setBizName(e.target.value)}
-                    className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
+                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
                     style={{ borderColor: COLORS.border, backgroundColor: '#FAFAF8', color: COLORS.navy }}
                   />
 
                   <label
-                    className="text-xs font-semibold block mt-3 mb-1.5"
+                    className="text-xs font-semibold block mt-2.5 mb-1"
                     style={{ color: COLORS.navy }}
                   >
                     {t.username}
@@ -1312,14 +1324,14 @@ export default function App() {
                     placeholder="ឧ. dany_cafe"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
+                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
                     style={{ borderColor: COLORS.border, backgroundColor: '#FAFAF8', color: COLORS.navy }}
                   />
 
                   <button
                     disabled={!bizName || !username}
                     onClick={() => setSignUpStep(2)}
-                    className="w-full mt-4 py-3 rounded-lg font-bold text-white text-sm flex items-center justify-center gap-1"
+                    className="w-full mt-3 py-2.5 rounded-lg font-bold text-white text-sm flex items-center justify-center gap-1"
                     style={{
                       backgroundColor: !bizName || !username ? '#C4C9CC' : COLORS.gold,
                     }}
@@ -1329,11 +1341,11 @@ export default function App() {
                 </div>
               ) : (
                 <div>
-                  <h2 className="text-lg font-bold mb-3" style={{ color: COLORS.navy }}>
+                  <h2 className="text-base font-bold mb-2.5" style={{ color: COLORS.navy }}>
                     {lang === 'KH' ? 'សុវត្ថិភាពគណនី' : 'Security'}
                   </h2>
                   <label
-                    className="text-xs font-semibold block mb-1.5"
+                    className="text-xs font-semibold block mb-1"
                     style={{ color: COLORS.navy }}
                   >
                     {t.phone}
@@ -1343,7 +1355,7 @@ export default function App() {
                     inputMode="numeric"
                     value={signUpPhone}
                     onChange={(e) => setSignUpPhone(formatKhmerPhoneDisplay(e.target.value))}
-                    className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none"
+                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
                     style={{
                       borderColor: COLORS.border,
                       backgroundColor: '#FAFAF8',
@@ -1353,7 +1365,7 @@ export default function App() {
                   />
 
                   <label
-                    className="text-xs font-semibold block mt-3 mb-1.5"
+                    className="text-xs font-semibold block mt-2.5 mb-1"
                     style={{ color: COLORS.navy }}
                   >
                     {t.password}
@@ -1367,7 +1379,7 @@ export default function App() {
                       placeholder="••••••••"
                       value={signUpPassword}
                       onChange={(e) => setSignUpPassword(e.target.value)}
-                      className="flex-1 px-3 py-2.5 text-sm outline-none bg-transparent"
+                      className="flex-1 px-3 py-2 text-sm outline-none bg-transparent"
                       style={{ color: COLORS.navy, ...latinFont }}
                     />
                     <button onClick={() => setShowSignUpPassword(!showSignUpPassword)}>
@@ -1379,9 +1391,9 @@ export default function App() {
                     </button>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 mt-2">
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
                     <span
-                      className="text-[10px]"
+                      className="text-[9.5px]"
                       style={{
                         color: passRules.length ? COLORS.success : COLORS.muted,
                         fontWeight: passRules.length ? 600 : 400,
@@ -1390,7 +1402,7 @@ export default function App() {
                       ● ≥ ៨ តួ
                     </span>
                     <span
-                      className="text-[10px]"
+                      className="text-[9.5px]"
                       style={{
                         color: passRules.upper ? COLORS.success : COLORS.muted,
                         fontWeight: passRules.upper ? 600 : 400,
@@ -1399,7 +1411,7 @@ export default function App() {
                       ● A-Z
                     </span>
                     <span
-                      className="text-[10px]"
+                      className="text-[9.5px]"
                       style={{
                         color: passRules.lower ? COLORS.success : COLORS.muted,
                         fontWeight: passRules.lower ? 600 : 400,
@@ -1408,7 +1420,7 @@ export default function App() {
                       ● a-z
                     </span>
                     <span
-                      className="text-[10px]"
+                      className="text-[9.5px]"
                       style={{
                         color: passRules.number ? COLORS.success : COLORS.muted,
                         fontWeight: passRules.number ? 600 : 400,
@@ -1417,7 +1429,7 @@ export default function App() {
                       ● 0-9
                     </span>
                     <span
-                      className="text-[10px]"
+                      className="text-[9.5px]"
                       style={{
                         color: passRules.special ? COLORS.success : COLORS.muted,
                         fontWeight: passRules.special ? 600 : 400,
@@ -1428,7 +1440,7 @@ export default function App() {
                   </div>
 
                   <label
-                    className="text-xs font-semibold block mt-3 mb-1.5"
+                    className="text-xs font-semibold block mt-2.5 mb-1"
                     style={{ color: COLORS.navy }}
                   >
                     {lang === 'KH' ? 'ផ្ទៀងផ្ទាត់លេខសម្ងាត់' : 'Confirm Password'}
@@ -1442,7 +1454,7 @@ export default function App() {
                       placeholder="••••••••"
                       value={signUpConfirmPassword}
                       onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                      className="flex-1 px-3 py-2.5 text-sm outline-none bg-transparent"
+                      className="flex-1 px-3 py-2 text-sm outline-none bg-transparent"
                       style={{ color: COLORS.navy, ...latinFont }}
                     />
                     {signUpConfirmPassword && (
@@ -1452,7 +1464,7 @@ export default function App() {
 
                   {signUpError && (
                     <div
-                      className="mt-3 p-2.5 rounded-lg border text-xs"
+                      className="mt-2.5 p-2 rounded-lg border text-xs"
                       style={{
                         backgroundColor: COLORS.dangerTint,
                         borderColor: '#F4A8A0',
@@ -1466,7 +1478,7 @@ export default function App() {
                   <button
                     disabled={!isPasswordValid || !isConfirmMatch || !signUpPhone || signUpBusy}
                     onClick={handleSignUpSubmit}
-                    className="w-full mt-4 py-3 rounded-lg font-bold text-white text-sm disabled:opacity-60"
+                    className="w-full mt-3 py-2.5 rounded-lg font-bold text-white text-sm disabled:opacity-60"
                     style={{
                       backgroundColor:
                         !isPasswordValid || !isConfirmMatch || !signUpPhone ? '#C4C9CC' : COLORS.gold,
@@ -1481,7 +1493,7 @@ export default function App() {
 
                   <button
                     onClick={() => setSignUpStep(1)}
-                    className="w-full mt-3 text-center text-xs font-bold flex items-center justify-center gap-1"
+                    className="w-full mt-2.5 text-center text-xs font-bold flex items-center justify-center gap-1"
                     style={{ color: COLORS.gold }}
                   >
                     <ArrowLeft size={INLINE} color={COLORS.gold} strokeWidth={2} />
@@ -1492,7 +1504,7 @@ export default function App() {
 
               <button
                 onClick={() => setCurrentScreen('SignIn')}
-                className="w-full mt-3 text-center text-xs"
+                className="w-full mt-2.5 text-center text-xs"
                 style={{ color: COLORS.muted }}
               >
                 {lang === 'KH' ? 'មានគណនីរួចហើយ? ' : 'Already have account? '}
@@ -1500,7 +1512,25 @@ export default function App() {
                   {t.login}
                 </span>
               </button>
+
+              <button
+                onClick={openTelegram}
+                className="w-full mt-3 pt-2.5 border-t text-xs font-semibold flex items-center justify-center gap-1.5"
+                style={{ borderColor: COLORS.border, color: COLORS.goldDark }}
+              >
+                <Send size={INLINE} color={COLORS.goldDark} strokeWidth={2} />
+                {t.help}
+              </button>
             </div>
+          </div>
+
+          <div className="w-full max-w-sm text-center mt-2.5 flex-shrink-0">
+            <p className="text-[10px] font-medium" style={{ color: COLORS.muted }}>
+              Build By: Pang Sokheng
+            </p>
+            <p className="text-[9px] mt-0.5" style={{ color: COLORS.muted, opacity: 0.7 }}>
+              Support By: @Cluade.com
+            </p>
           </div>
         </div>
       )}
@@ -1619,69 +1649,114 @@ export default function App() {
           <div className="app-scroll h-full overflow-y-auto overflow-x-hidden p-3.5 pb-24 flex flex-col">
           <div className="mx-auto w-full flex-1 flex flex-col" style={{ maxWidth: 480 }}>
 
-            {/* Balance card — compact */}
+            {/* Balance card — small, clean, minimal */}
             <div
-              className="relative rounded-3xl overflow-hidden flex-shrink-0"
+              className="relative rounded-2xl overflow-hidden flex-shrink-0"
               style={{
-                padding: 18,
+                padding: '14px 16px',
                 background: `linear-gradient(135deg, ${COLORS.navyGradientStart}, ${COLORS.navyGradientEnd})`,
-                boxShadow: '0 8px 18px rgba(12,68,124,0.26), 0 2px 5px rgba(12,68,124,0.14)',
+                boxShadow: '0 8px 18px rgba(12,68,124,0.24), 0 2px 5px rgba(12,68,124,0.12)',
               }}
             >
               <div
-                className="absolute rounded-full"
-                style={{ width: 110, height: 110, top: -40, right: -30, background: 'rgba(255,255,255,0.06)' }}
+                className="absolute rounded-full pointer-events-none"
+                style={{ width: 90, height: 90, top: -30, right: -25, background: 'rgba(255,255,255,0.06)' }}
               />
               <div className="relative flex items-center justify-between">
-                <p className="text-[11px] font-semibold text-white/75 tracking-wide">
-                  {lang === 'KH' ? 'សមតុល្យសរុប' : 'Total Balance'}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <Wallet size={12} className="text-white/70" strokeWidth={2} />
+                  <p className="text-[10px] font-semibold text-white/75 tracking-wide uppercase">
+                    {lang === 'KH' ? 'សមតុល្យសរុប' : 'Total Balance'}
+                  </p>
+                </div>
                 <button
                   onClick={() => setShowBalance((v) => !v)}
                   aria-label={lang === 'KH' ? 'លាក់/បង្ហាញសមតុល្យ' : 'Show/hide balance'}
                   className="flex items-center justify-center rounded-lg flex-shrink-0"
-                  style={{ width: 26, height: 26, background: 'rgba(255,255,255,0.15)' }}
+                  style={{ width: 22, height: 22, background: 'rgba(255,255,255,0.15)' }}
                 >
                   {showBalance ? (
-                    <Eye size={13} className="text-white" />
+                    <Eye size={12} className="text-white" />
                   ) : (
-                    <EyeOff size={13} className="text-white" />
+                    <EyeOff size={12} className="text-white" />
                   )}
                 </button>
               </div>
 
-              <div className="relative flex items-center gap-3 mt-3">
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                  <div
-                    className="flex items-center justify-center rounded-lg flex-shrink-0"
-                    style={{ width: 24, height: 24, background: 'rgba(255,255,255,0.15)' }}
-                  >
-                    <DollarSign size={13} className="text-white" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[9px] text-white/60 leading-none">USD</p>
-                    <p className="text-base font-extrabold text-white truncate leading-tight" style={latinFont}>
-                      {showBalance
-                        ? `$${balanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                        : '••••••'}
-                    </p>
-                  </div>
+              <div className="relative flex items-end justify-between gap-3 mt-2">
+                <div className="min-w-0">
+                  <p className="text-[9px] text-white/55 leading-none mb-0.5" style={latinFont}>USD</p>
+                  <p className="text-lg font-extrabold text-white truncate leading-none" style={latinFont}>
+                    {showBalance
+                      ? `$${balanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : '••••••'}
+                  </p>
                 </div>
                 <div className="w-px self-stretch" style={{ background: 'rgba(255,255,255,0.16)' }} />
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                  <div
-                    className="flex items-center justify-center rounded-lg flex-shrink-0"
-                    style={{ width: 24, height: 24, background: 'rgba(255,255,255,0.15)' }}
-                  >
-                    <span className="text-white text-xs font-bold">៛</span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[9px] text-white/60 leading-none">KHR</p>
-                    <p className="text-base font-extrabold text-white truncate leading-tight" style={latinFont}>
-                      {showBalance ? `${balanceKHR.toLocaleString()} ៛` : '••••••'}
-                    </p>
-                  </div>
+                <div className="min-w-0 text-right flex-1">
+                  <p className="text-[9px] text-white/55 leading-none mb-0.5" style={latinFont}>KHR</p>
+                  <p className="text-lg font-extrabold text-white truncate leading-none" style={latinFont}>
+                    {showBalance ? `${balanceKHR.toLocaleString()} ៛` : '••••••'}
+                  </p>
                 </div>
+              </div>
+            </div>
+
+            {/* Weekly Pulse — 7-day net cash-flow trend, at a glance */}
+            <div
+              className="mt-2.5 p-3 rounded-2xl flex-shrink-0"
+              style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-bold" style={{ color: COLORS.navy }}>
+                  {lang === 'KH' ? 'ចលនា ៧ ថ្ងៃចុងក្រោយ' : '7-Day Pulse'}
+                </p>
+                <div
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: weeklyFlow.weekNet >= 0 ? COLORS.successTint : COLORS.dangerTint,
+                  }}
+                >
+                  {weeklyFlow.weekNet >= 0 ? (
+                    <TrendingUp size={10} style={{ color: COLORS.success }} strokeWidth={2.5} />
+                  ) : (
+                    <TrendingDown size={10} style={{ color: COLORS.danger }} strokeWidth={2.5} />
+                  )}
+                  <span
+                    className="text-[10px] font-bold"
+                    style={{ color: weeklyFlow.weekNet >= 0 ? COLORS.success : COLORS.danger, ...latinFont }}
+                  >
+                    {weeklyFlow.weekNet >= 0 ? '+' : ''}
+                    {weeklyFlow.weekNet.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-end justify-between gap-1.5" style={{ height: 44 }}>
+                {weeklyFlow.days.map((d) => {
+                  const barH = Math.max(4, (Math.abs(d.net) / weeklyFlow.maxAbs) * 34);
+                  const positive = d.net >= 0;
+                  return (
+                    <div key={d.key} className="flex-1 flex flex-col items-center justify-end h-full min-w-0">
+                      <div
+                        className="w-full rounded-full transition-all"
+                        style={{
+                          height: barH,
+                          maxWidth: 16,
+                          background: positive
+                            ? 'linear-gradient(180deg, #34C77B, #1F9D6B)'
+                            : 'linear-gradient(180deg, #F0785C, #E5533D)',
+                          opacity: d.isToday ? 1 : 0.55,
+                        }}
+                      />
+                      <span
+                        className="text-[8.5px] mt-1 font-semibold"
+                        style={{ color: d.isToday ? COLORS.navy : COLORS.muted }}
+                      >
+                        {d.label}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -1873,35 +1948,66 @@ export default function App() {
                   );
                 })()}
 
-                <div className="flex gap-2.5 mt-3 pt-3" style={{ borderTop: `1px solid ${COLORS.border}` }}>
-                  <div className="flex-1 flex items-center gap-2 min-w-0">
+                <div className="flex gap-2 mt-3 pt-3" style={{ borderTop: `1px solid ${COLORS.border}` }}>
+                  {(() => {
+                    const activeTotals = homeStatsTab === 'today' ? todayTotals : monthTotals;
+                    const netUSD = activeTotals.incomeUSD - activeTotals.expenseUSD;
+                    const netPositive = netUSD >= 0;
+                    return (
+                      <div className="flex-1 flex items-center gap-1.5 min-w-0">
+                        <div
+                          className="flex items-center justify-center rounded-lg flex-shrink-0"
+                          style={{ width: 22, height: 22, backgroundColor: netPositive ? COLORS.successTint : COLORS.dangerTint }}
+                        >
+                          {netPositive ? (
+                            <ArrowUpRight size={11} style={{ color: COLORS.success }} />
+                          ) : (
+                            <ArrowDownRight size={11} style={{ color: COLORS.danger }} />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[8.5px] truncate" style={{ color: COLORS.muted }}>
+                            {lang === 'KH' ? 'សុទ្ធ' : 'Net'}
+                          </p>
+                          <p
+                            className="text-[11px] font-bold truncate"
+                            style={{ color: netPositive ? COLORS.success : COLORS.danger, ...latinFont }}
+                          >
+                            {netPositive ? '+' : ''}
+                            {netUSD.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  <div className="flex-1 flex items-center gap-1.5 min-w-0">
                     <div
                       className="flex items-center justify-center rounded-lg flex-shrink-0"
-                      style={{ width: 24, height: 24, backgroundColor: COLORS.invoiceTint }}
+                      style={{ width: 22, height: 22, backgroundColor: COLORS.invoiceTint }}
                     >
-                      <Receipt size={12} style={{ color: COLORS.invoice }} />
+                      <Receipt size={11} style={{ color: COLORS.invoice }} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[9px] truncate" style={{ color: COLORS.muted }}>
-                        {lang === 'KH' ? 'វិក្កយបត្រខែនេះ' : 'Invoices'}
+                      <p className="text-[8.5px] truncate" style={{ color: COLORS.muted }}>
+                        {lang === 'KH' ? 'វិក្កយបត្រ' : 'Invoices'}
                       </p>
-                      <p className="text-xs font-bold" style={{ color: COLORS.navy }}>
+                      <p className="text-[11px] font-bold" style={{ color: COLORS.navy }}>
                         {invoiceCount === null ? '...' : invoiceCount}
                       </p>
                     </div>
                   </div>
-                  <div className="flex-1 flex items-center gap-2 min-w-0">
+                  <div className="flex-1 flex items-center gap-1.5 min-w-0">
                     <div
                       className="flex items-center justify-center rounded-lg flex-shrink-0"
-                      style={{ width: 24, height: 24, backgroundColor: COLORS.stockTint }}
+                      style={{ width: 22, height: 22, backgroundColor: COLORS.stockTint }}
                     >
-                      <Package size={12} style={{ color: COLORS.stock }} />
+                      <Package size={11} style={{ color: COLORS.stock }} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[9px] truncate" style={{ color: COLORS.muted }}>
-                        {lang === 'KH' ? 'ស្តុកបច្ចុប្បន្ន' : 'Stock'}
+                      <p className="text-[8.5px] truncate" style={{ color: COLORS.muted }}>
+                        {lang === 'KH' ? 'ស្តុក' : 'Stock'}
                       </p>
-                      <p className="text-xs font-bold" style={{ color: COLORS.navy }}>
+                      <p className="text-[11px] font-bold" style={{ color: COLORS.navy }}>
                         {productCount === null ? '...' : productCount}
                       </p>
                     </div>
