@@ -167,7 +167,7 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
           quantity: number;
           unit_price: number;
           cost_price: number | null;
-          invoices: { invoice_date: string; currency: string };
+          invoices: { invoice_date: string; currency: string }[];
         }[]) || [];
 
       const sum = (list: typeof tx, type: string, currency: string) =>
@@ -180,7 +180,7 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
 
       const grossProfit = (currency: string) =>
         costedItems
-          .filter((it) => it.invoices?.currency === currency)
+          .filter((it) => it.invoices?.[0]?.currency === currency)
           .reduce((acc, it) => acc + (Number(it.unit_price) - Number(it.cost_price)) * Number(it.quantity), 0);
 
       const low = prod.filter((p) => Number(p.quantity) <= Number(p.low_stock_threshold));
