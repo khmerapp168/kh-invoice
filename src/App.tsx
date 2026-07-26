@@ -690,7 +690,7 @@ export default function App() {
 
   /* ---------- inline icon button (for header actions etc.) ---------- */
   const IconBtn = ({
-    icon,
+    icon: Icon,
     tint = 'navy',
     onClick,
     'aria-label': ariaLabel,
@@ -703,16 +703,16 @@ export default function App() {
     <button
       onClick={onClick}
       aria-label={ariaLabel}
-      className="flex items-center justify-center"
+      className="flex items-center justify-center flex-shrink-0"
       style={{
-        width: 44,
-        height: 44,
-        borderRadius: 12,
-        backgroundColor: tint === 'light' ? 'rgba(255,255,255,0.18)' : '#FFFFFF',
+        width: 32,
+        height: 32,
+        borderRadius: 10,
+        backgroundColor: tint === 'light' ? 'rgba(255,255,255,0.16)' : '#FFFFFF',
         border: tint === 'light' ? 'none' : `1px solid ${COLORS.border}`,
       }}
     >
-      <IconBadge icon={icon} size={INLINE} tint={tint} shape="rounded" />
+      <Icon size={15} color={tint === 'light' ? '#FFFFFF' : COLORS.navy} strokeWidth={2} />
     </button>
   );
 
@@ -1510,58 +1510,56 @@ export default function App() {
          ============================================ */}
       {currentScreen === 'Home' && (
         <div className="h-[100dvh] flex flex-col overflow-hidden" style={{ backgroundColor: COLORS.bgApp }}>
-          {/* Header */}
+          {/* Header — compact: smaller avatar, smaller icon buttons */}
           <div
-            className="px-4 pb-5 relative overflow-hidden"
+            className="px-4 pb-4 relative overflow-hidden"
             style={{
               background: `linear-gradient(160deg, ${COLORS.navyGradientStart}, ${COLORS.navyGradientEnd})`,
-              paddingTop: 'max(0.9rem, env(safe-area-inset-top))',
+              paddingTop: 'max(0.75rem, env(safe-area-inset-top))',
             }}
           >
-            {/* soft decorative glow so the header doesn't look flat */}
             <div
               className="pointer-events-none absolute rounded-full"
-              style={{ width: 180, height: 180, top: -90, right: -60, background: 'rgba(255,255,255,0.06)' }}
-            />
-            <div
-              className="pointer-events-none absolute rounded-full"
-              style={{ width: 110, height: 110, top: 20, left: -50, background: 'rgba(255,255,255,0.05)' }}
+              style={{ width: 140, height: 140, top: -75, right: -50, background: 'rgba(255,255,255,0.06)' }}
             />
             <div className="relative flex justify-between items-center">
               <div className="flex items-center flex-1 min-w-0">
                 {profile?.avatar_url ? (
                   <div
-                    className="rounded-2xl overflow-hidden flex-shrink-0"
-                    style={{ width: 46, height: 46, boxShadow: '0 0 0 2px rgba(255,255,255,0.35)' }}
+                    className="rounded-xl overflow-hidden flex-shrink-0"
+                    style={{ width: 38, height: 38, boxShadow: '0 0 0 2px rgba(255,255,255,0.32)' }}
                   >
                     <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                   </div>
                 ) : (
-                  <IconBadge icon={ImageIcon} size={INLINE} tint="light" shape="rounded" />
+                  <div
+                    className="flex items-center justify-center rounded-xl flex-shrink-0"
+                    style={{ width: 38, height: 38, backgroundColor: 'rgba(255,255,255,0.16)' }}
+                  >
+                    <ImageIcon size={17} color="#FFFFFF" strokeWidth={2} />
+                  </div>
                 )}
-                <div className="ml-2.5 min-w-0">
-                  <p className="text-[11px] font-semibold text-white/70 truncate">{greeting}</p>
-                  <p className="text-sm font-bold text-white truncate">
+                <div className="ml-2 min-w-0">
+                  <p className="text-[10px] font-semibold text-white/65 truncate">{greeting}</p>
+                  <p className="text-[13px] font-bold text-white truncate">
                     {profile?.business_name || '...'}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <button
                   onClick={() => setLang(lang === 'KH' ? 'EN' : 'KH')}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.18)', color: '#FFFFFF' }}
+                  className="flex items-center justify-center rounded-full text-[11px] font-bold flex-shrink-0"
+                  style={{ width: 32, height: 32, backgroundColor: 'rgba(255,255,255,0.16)', color: '#FFFFFF' }}
                 >
-                  <Languages size={14} color="#FFFFFF" strokeWidth={2} />
                   {lang === 'KH' ? 'ខ្មែរ' : 'EN'}
                 </button>
-                <IconBtn icon={HelpCircle} tint="light" aria-label={lang === 'KH' ? 'របៀបប្រើ' : 'How to use'} onClick={() => setShowTips(true)} />
                 <IconBtn icon={Bell} tint="light" aria-label="Notifications" onClick={() => setShowSubscription(true)} />
                 <IconBtn icon={LogOut} tint="light" onClick={handleLogout} aria-label="Logout" />
               </div>
             </div>
-            <div className="relative flex items-center justify-between mt-3.5 gap-2">
-              <p className="text-[11px] font-semibold text-white/75 truncate min-w-0" style={latinFont}>
+            <div className="relative flex items-center justify-between mt-2.5 gap-2">
+              <p className="text-[10px] font-semibold text-white/70 truncate min-w-0" style={latinFont}>
                 {new Date().toLocaleDateString(lang === 'KH' ? 'km-KH' : 'en-US', {
                   weekday: 'long',
                   day: 'numeric',
@@ -1570,28 +1568,26 @@ export default function App() {
                 • {timeStr}
               </p>
               <button
-                onClick={() => setHomeShowAllTx(true)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold flex-shrink-0"
-                style={{ backgroundColor: 'rgba(255,255,255,0.18)', color: '#FFFFFF' }}
-                aria-label={lang === 'KH' ? 'មើលប្រតិបត្តិការទាំងអស់' : 'View all transactions'}
+                onClick={() => setShowTips(true)}
+                aria-label={lang === 'KH' ? 'របៀបប្រើ' : 'How to use'}
+                className="flex items-center justify-center rounded-full flex-shrink-0"
+                style={{ width: 22, height: 22, backgroundColor: 'rgba(255,255,255,0.16)' }}
               >
-                <Receipt size={12} color="#FFFFFF" strokeWidth={2.2} />
-                {lang === 'KH' ? 'ប្រតិបត្តិការ' : 'Transactions'}
+                <HelpCircle size={12} color="#FFFFFF" strokeWidth={2} />
               </button>
             </div>
           </div>
 
-          {/* Trial + Install — merged into one slim strip so it never
-             crowds the header/date, and only ever takes one row */}
+          {/* Trial + Install — one slim strip, only when relevant */}
           {(showTrialBanner || showInstallBanner) && (
             <div
-              className="mx-3.5 mt-2.5 flex items-center gap-2 px-3 py-1.5 rounded-xl"
+              className="mx-3.5 mt-2 flex items-center gap-2 px-3 py-1.5 rounded-xl"
               style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.1)', border: `1px solid ${COLORS.border}` }}
             >
               {showInstallBanner ? (
-                <img src="/icon-192.png" alt="" className="w-6 h-6 rounded-md flex-shrink-0" />
+                <img src="/icon-192.png" alt="" className="w-5 h-5 rounded-md flex-shrink-0" />
               ) : (
-                <Clock size={14} color={COLORS.goldDark} strokeWidth={2} className="flex-shrink-0" />
+                <Clock size={13} color={COLORS.goldDark} strokeWidth={2} className="flex-shrink-0" />
               )}
               <p className="flex-1 min-w-0 truncate text-[11px] font-semibold" style={{ color: COLORS.navy }}>
                 {showInstallBanner
@@ -1604,97 +1600,84 @@ export default function App() {
                 <>
                   <button
                     onClick={handleInstallClick}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-white text-[11px] flex-shrink-0"
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg font-bold text-white text-[10px] flex-shrink-0"
                     style={{ backgroundColor: COLORS.gold }}
                   >
-                    <Download size={12} color="#FFFFFF" strokeWidth={2.5} />
+                    <Download size={11} color="#FFFFFF" strokeWidth={2.5} />
                     {lang === 'KH' ? 'ដំឡើង' : 'Install'}
                   </button>
                   <button onClick={dismissInstallBanner} aria-label="Dismiss" className="flex-shrink-0">
-                    <X size={15} color={COLORS.muted} strokeWidth={2} />
+                    <X size={14} color={COLORS.muted} strokeWidth={2} />
                   </button>
                 </>
               )}
             </div>
           )}
 
-          {/* Content — permanently locked, never drags up/down.
-             Use the "Transactions" pill above to see everything in
-             a dedicated, fully scrollable full-screen view. */}
+          {/* Content */}
           <div className="relative flex-1 min-h-0">
-          <div className="app-scroll h-full overflow-y-auto overflow-x-hidden p-3.5 pb-24">
-          <div className="mx-auto w-full" style={{ maxWidth: 520 }}>
-            {/* Balance card */}
+          <div className="app-scroll h-full overflow-y-auto overflow-x-hidden p-3.5 pb-24 flex flex-col">
+          <div className="mx-auto w-full flex-1 flex flex-col" style={{ maxWidth: 480 }}>
+
+            {/* Balance card — compact */}
             <div
-              className="relative p-6 rounded-[28px] overflow-hidden"
+              className="relative rounded-3xl overflow-hidden flex-shrink-0"
               style={{
+                padding: 18,
                 background: `linear-gradient(135deg, ${COLORS.navyGradientStart}, ${COLORS.navyGradientEnd})`,
-                boxShadow: '0 10px 24px rgba(12,68,124,0.30), 0 2px 6px rgba(12,68,124,0.15)',
+                boxShadow: '0 8px 18px rgba(12,68,124,0.26), 0 2px 5px rgba(12,68,124,0.14)',
               }}
             >
               <div
                 className="absolute rounded-full"
-                style={{ width: 150, height: 150, top: -55, right: -45, background: 'rgba(255,255,255,0.06)' }}
+                style={{ width: 110, height: 110, top: -40, right: -30, background: 'rgba(255,255,255,0.06)' }}
               />
-              <div
-                className="absolute rounded-full"
-                style={{ width: 95, height: 95, bottom: -35, right: 35, background: 'rgba(255,255,255,0.05)' }}
-              />
-              <div className="relative flex items-start justify-between">
-                <p className="text-xs font-semibold text-white/80 tracking-wide">
+              <div className="relative flex items-center justify-between">
+                <p className="text-[11px] font-semibold text-white/75 tracking-wide">
                   {lang === 'KH' ? 'សមតុល្យសរុប' : 'Total Balance'}
                 </p>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setShowBalance((v) => !v)}
-                    aria-label={lang === 'KH' ? 'លាក់/បង្ហាញសមតុល្យ' : 'Show/hide balance'}
-                    className="flex items-center justify-center rounded-xl"
-                    style={{ width: 32, height: 32, background: 'rgba(255,255,255,0.15)' }}
-                  >
-                    {showBalance ? (
-                      <Eye size={16} className="text-white" />
-                    ) : (
-                      <EyeOff size={16} className="text-white" />
-                    )}
-                  </button>
-                  <div
-                    className="flex items-center justify-center rounded-xl"
-                    style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.15)' }}
-                  >
-                    <CreditCard size={18} className="text-white" />
-                  </div>
-                </div>
+                <button
+                  onClick={() => setShowBalance((v) => !v)}
+                  aria-label={lang === 'KH' ? 'លាក់/បង្ហាញសមតុល្យ' : 'Show/hide balance'}
+                  className="flex items-center justify-center rounded-lg flex-shrink-0"
+                  style={{ width: 26, height: 26, background: 'rgba(255,255,255,0.15)' }}
+                >
+                  {showBalance ? (
+                    <Eye size={13} className="text-white" />
+                  ) : (
+                    <EyeOff size={13} className="text-white" />
+                  )}
+                </button>
               </div>
 
-              {/* Split by currency: USD + KHR, each with its own icon */}
-              <div className="relative flex items-center gap-3 mt-3.5">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="relative flex items-center gap-3 mt-3">
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
                   <div
                     className="flex items-center justify-center rounded-lg flex-shrink-0"
-                    style={{ width: 30, height: 30, background: 'rgba(255,255,255,0.16)' }}
+                    style={{ width: 24, height: 24, background: 'rgba(255,255,255,0.15)' }}
                   >
-                    <DollarSign size={16} className="text-white" />
+                    <DollarSign size={13} className="text-white" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] text-white/65">USD</p>
-                    <p className="text-lg font-extrabold text-white truncate" style={latinFont}>
+                    <p className="text-[9px] text-white/60 leading-none">USD</p>
+                    <p className="text-base font-extrabold text-white truncate leading-tight" style={latinFont}>
                       {showBalance
                         ? `$${balanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                         : '••••••'}
                     </p>
                   </div>
                 </div>
-                <div className="w-px self-stretch" style={{ background: 'rgba(255,255,255,0.18)' }} />
-                <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="w-px self-stretch" style={{ background: 'rgba(255,255,255,0.16)' }} />
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
                   <div
                     className="flex items-center justify-center rounded-lg flex-shrink-0"
-                    style={{ width: 30, height: 30, background: 'rgba(255,255,255,0.16)' }}
+                    style={{ width: 24, height: 24, background: 'rgba(255,255,255,0.15)' }}
                   >
-                    <span className="text-white text-sm font-bold">៛</span>
+                    <span className="text-white text-xs font-bold">៛</span>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] text-white/65">KHR</p>
-                    <p className="text-lg font-extrabold text-white truncate" style={latinFont}>
+                    <p className="text-[9px] text-white/60 leading-none">KHR</p>
+                    <p className="text-base font-extrabold text-white truncate leading-tight" style={latinFont}>
                       {showBalance ? `${balanceKHR.toLocaleString()} ៛` : '••••••'}
                     </p>
                   </div>
@@ -1702,11 +1685,114 @@ export default function App() {
               </div>
             </div>
 
-            {/* Today / Month overview — segmented toggle so the most
-               important numbers (daily + monthly) are one tap apart */}
-            <div className="mt-5">
-              <div className="flex items-center justify-between mb-2.5">
-                <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
+            {/* Quick Actions — the main, centered focus of the screen so the
+               most-used actions are always one easy tap away */}
+            <div className="flex-1 flex flex-col items-center justify-center py-6 min-h-0">
+              <div className="w-full">
+                <p className="text-center text-sm font-bold mb-4" style={{ color: COLORS.navy }}>
+                  {lang === 'KH' ? 'មុខងាររហ័ស' : 'Quick Actions'}
+                </p>
+                <div className="grid grid-cols-4 gap-x-3 gap-y-5 place-items-center">
+                  {[
+                    {
+                      key: 'invoice',
+                      icon: Receipt,
+                      label: lang === 'KH' ? 'វិក្កយបត្រ' : 'Invoice',
+                      gradient: 'linear-gradient(135deg, #4EA1E8, #2E86C1)',
+                      onClick: () => setCurrentScreen('InvoiceOverview'),
+                      show: true,
+                    },
+                    {
+                      key: 'stock',
+                      icon: Package,
+                      label: lang === 'KH' ? 'ស្តុក' : 'Stock',
+                      gradient: 'linear-gradient(135deg, #22B491, #0F6E56)',
+                      onClick: () => setCurrentScreen('Stock'),
+                      show: profile?.stock_module_enabled ?? true,
+                    },
+                    {
+                      key: 'income',
+                      icon: TrendingUp,
+                      label: lang === 'KH' ? 'ចំណូល' : 'Income',
+                      gradient: 'linear-gradient(135deg, #34C77B, #1F9D6B)',
+                      onClick: () => openAddModal('income'),
+                      show: true,
+                    },
+                    {
+                      key: 'expense',
+                      icon: TrendingDown,
+                      label: lang === 'KH' ? 'ចំណាយ' : 'Expense',
+                      gradient: 'linear-gradient(135deg, #F0785C, #E5533D)',
+                      onClick: () => openAddModal('expense'),
+                      show: true,
+                    },
+                    {
+                      key: 'exchange',
+                      icon: Landmark,
+                      label: lang === 'KH' ? 'ប្តូរប្រាក់' : 'Exchange',
+                      gradient: `linear-gradient(135deg, ${COLORS.accentGold}, ${COLORS.accentGoldDark})`,
+                      onClick: () => setIsExchangeOpen(true),
+                      show: true,
+                    },
+                    {
+                      key: 'report',
+                      icon: BarChart3,
+                      label: lang === 'KH' ? 'របាយការណ៍' : 'Report',
+                      gradient: `linear-gradient(135deg, ${COLORS.navyGradientEnd}, ${COLORS.navyGradientStart})`,
+                      onClick: () => setCurrentScreen('Report'),
+                      show: true,
+                    },
+                    {
+                      key: 'customer',
+                      icon: Users,
+                      label: lang === 'KH' ? 'អតិថិជន' : 'Customer',
+                      gradient: 'linear-gradient(135deg, #6FB3EC, #2E86C1)',
+                      onClick: () => setCurrentScreen('Customer'),
+                      show: true,
+                    },
+                    {
+                      key: 'category',
+                      icon: Tag,
+                      label: lang === 'KH' ? 'ប្រភេទ' : 'Category',
+                      gradient: `linear-gradient(135deg, #F2B84B, ${COLORS.accentGoldDark})`,
+                      onClick: () => setCurrentScreen('Category'),
+                      show: true,
+                    },
+                  ]
+                    .filter((a) => a.show)
+                    .map((action) => (
+                      <button
+                        key={action.key}
+                        onClick={action.onClick}
+                        className="flex flex-col items-center min-w-0 w-full"
+                      >
+                        <div
+                          className="flex items-center justify-center rounded-2xl flex-shrink-0"
+                          style={{
+                            width: 54,
+                            height: 54,
+                            background: action.gradient,
+                            boxShadow: '0 4px 10px rgba(12,68,124,0.18)',
+                          }}
+                        >
+                          <action.icon size={23} color="#FFFFFF" strokeWidth={2.2} />
+                        </div>
+                        <span
+                          className="text-[10.5px] font-semibold mt-1.5 truncate w-full text-center"
+                          style={{ color: COLORS.navy }}
+                        >
+                          {action.label}
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Overview — Today / Month toggle, compact secondary summary */}
+            <div className="flex-shrink-0 mb-1">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[13px] font-bold" style={{ color: COLORS.navy }}>
                   {lang === 'KH' ? 'ទិន្នន័យសង្ខេប' : 'Overview'}
                 </p>
                 <div
@@ -1715,7 +1801,7 @@ export default function App() {
                 >
                   <button
                     onClick={() => setHomeStatsTab('today')}
-                    className="px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors"
+                    className="px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors"
                     style={{
                       backgroundColor: homeStatsTab === 'today' ? COLORS.navy : 'transparent',
                       color: homeStatsTab === 'today' ? '#FFFFFF' : COLORS.muted,
@@ -1725,7 +1811,7 @@ export default function App() {
                   </button>
                   <button
                     onClick={() => setHomeStatsTab('month')}
-                    className="px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors"
+                    className="px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors"
                     style={{
                       backgroundColor: homeStatsTab === 'month' ? COLORS.navy : 'transparent',
                       color: homeStatsTab === 'month' ? '#FFFFFF' : COLORS.muted,
@@ -1737,59 +1823,49 @@ export default function App() {
               </div>
 
               <div
-                className="p-4 rounded-2xl"
+                className="p-3.5 rounded-2xl"
                 style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
               >
-                <div className="flex items-center gap-2 mb-3.5">
-                  <BarChart3 size={16} style={{ color: COLORS.navy }} />
-                  <p className="text-xs font-bold" style={{ color: COLORS.muted }}>
-                    {homeStatsTab === 'today' ? todayLabel : monthLabel}
-                  </p>
-                </div>
+                <p className="text-[10.5px] font-bold mb-2.5" style={{ color: COLORS.muted }}>
+                  {homeStatsTab === 'today' ? todayLabel : monthLabel}
+                </p>
 
-                {/* Income vs Expense bar chart */}
                 {(() => {
                   const activeTotals = homeStatsTab === 'today' ? todayTotals : monthTotals;
                   const maxVal = Math.max(activeTotals.incomeUSD, activeTotals.expenseUSD, 1);
                   const incomePct = Math.min(100, (activeTotals.incomeUSD / maxVal) * 100);
                   const expensePct = Math.min(100, (activeTotals.expenseUSD / maxVal) * 100);
                   return (
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                       <div>
                         <div className="flex justify-between items-center mb-1">
-                          <span className="text-xs font-semibold" style={{ color: COLORS.navy }}>
+                          <span className="text-[11px] font-semibold" style={{ color: COLORS.navy }}>
                             {lang === 'KH' ? 'ចំណូល' : 'Income'}
                           </span>
-                          <span className="text-xs font-bold" style={{ color: COLORS.success, ...latinFont }}>
+                          <span className="text-[11px] font-bold" style={{ color: COLORS.success, ...latinFont }}>
                             {formatMoney(activeTotals.incomeUSD, activeTotals.incomeKHR)}
                           </span>
                         </div>
-                        <div className="w-full h-2.5 rounded-full" style={{ backgroundColor: COLORS.successTint }}>
+                        <div className="w-full h-2 rounded-full" style={{ backgroundColor: COLORS.successTint }}>
                           <div
-                            className="h-2.5 rounded-full transition-all"
-                            style={{
-                              width: `${incomePct}%`,
-                              background: 'linear-gradient(90deg, #34C77B, #1F9D6B)',
-                            }}
+                            className="h-2 rounded-full transition-all"
+                            style={{ width: `${incomePct}%`, background: 'linear-gradient(90deg, #34C77B, #1F9D6B)' }}
                           />
                         </div>
                       </div>
                       <div>
                         <div className="flex justify-between items-center mb-1">
-                          <span className="text-xs font-semibold" style={{ color: COLORS.navy }}>
+                          <span className="text-[11px] font-semibold" style={{ color: COLORS.navy }}>
                             {lang === 'KH' ? 'ចំណាយ' : 'Expense'}
                           </span>
-                          <span className="text-xs font-bold" style={{ color: COLORS.danger, ...latinFont }}>
+                          <span className="text-[11px] font-bold" style={{ color: COLORS.danger, ...latinFont }}>
                             {formatMoney(activeTotals.expenseUSD, activeTotals.expenseKHR)}
                           </span>
                         </div>
-                        <div className="w-full h-2.5 rounded-full" style={{ backgroundColor: COLORS.dangerTint }}>
+                        <div className="w-full h-2 rounded-full" style={{ backgroundColor: COLORS.dangerTint }}>
                           <div
-                            className="h-2.5 rounded-full transition-all"
-                            style={{
-                              width: `${expensePct}%`,
-                              background: 'linear-gradient(90deg, #F0785C, #E5533D)',
-                            }}
+                            className="h-2 rounded-full transition-all"
+                            style={{ width: `${expensePct}%`, background: 'linear-gradient(90deg, #F0785C, #E5533D)' }}
                           />
                         </div>
                       </div>
@@ -1797,20 +1873,19 @@ export default function App() {
                   );
                 })()}
 
-                {/* Invoices / Stock quick counts */}
-                <div className="flex gap-2.5 mt-4 pt-3.5" style={{ borderTop: `1px solid ${COLORS.border}` }}>
+                <div className="flex gap-2.5 mt-3 pt-3" style={{ borderTop: `1px solid ${COLORS.border}` }}>
                   <div className="flex-1 flex items-center gap-2 min-w-0">
                     <div
                       className="flex items-center justify-center rounded-lg flex-shrink-0"
-                      style={{ width: 28, height: 28, backgroundColor: COLORS.invoiceTint }}
+                      style={{ width: 24, height: 24, backgroundColor: COLORS.invoiceTint }}
                     >
-                      <Receipt size={14} style={{ color: COLORS.invoice }} />
+                      <Receipt size={12} style={{ color: COLORS.invoice }} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
+                      <p className="text-[9px] truncate" style={{ color: COLORS.muted }}>
                         {lang === 'KH' ? 'វិក្កយបត្រខែនេះ' : 'Invoices'}
                       </p>
-                      <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
+                      <p className="text-xs font-bold" style={{ color: COLORS.navy }}>
                         {invoiceCount === null ? '...' : invoiceCount}
                       </p>
                     </div>
@@ -1818,15 +1893,15 @@ export default function App() {
                   <div className="flex-1 flex items-center gap-2 min-w-0">
                     <div
                       className="flex items-center justify-center rounded-lg flex-shrink-0"
-                      style={{ width: 28, height: 28, backgroundColor: COLORS.stockTint }}
+                      style={{ width: 24, height: 24, backgroundColor: COLORS.stockTint }}
                     >
-                      <Package size={14} style={{ color: COLORS.stock }} />
+                      <Package size={12} style={{ color: COLORS.stock }} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
+                      <p className="text-[9px] truncate" style={{ color: COLORS.muted }}>
                         {lang === 'KH' ? 'ស្តុកបច្ចុប្បន្ន' : 'Stock'}
                       </p>
-                      <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
+                      <p className="text-xs font-bold" style={{ color: COLORS.navy }}>
                         {productCount === null ? '...' : productCount}
                       </p>
                     </div>
@@ -1835,257 +1910,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* 7-day cash flow pulse — works for any type of business
-               (no dependency on named customers), and adds a trend view
-               the Home screen didn't have before */}
-            <div
-              className="p-4 rounded-2xl mt-3"
-              style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
-            >
-              <div className="flex items-center justify-between mb-3.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <IconBadge icon={Activity} size={INLINE} tint="invoice" shape="rounded" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold truncate" style={{ color: COLORS.navy }}>
-                      {lang === 'KH' ? 'ចរន្តសាច់ប្រាក់ ៧ថ្ងៃចុងក្រោយ' : '7-Day Cash Flow'}
-                    </p>
-                    <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
-                      {lang === 'KH' ? 'និន្នាការចំណូល-ចំណាយប្រចាំថ្ងៃ' : 'Daily income vs. expense trend'}
-                    </p>
-                  </div>
-                </div>
-                <div
-                  className="flex items-center gap-0.5 px-2 py-1 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: weeklyFlow.weekNet >= 0 ? COLORS.successTint : COLORS.dangerTint }}
-                >
-                  {weeklyFlow.weekNet >= 0 ? (
-                    <ArrowUpRight size={12} color={COLORS.success} strokeWidth={2.5} />
-                  ) : (
-                    <ArrowDownRight size={12} color={COLORS.danger} strokeWidth={2.5} />
-                  )}
-                  <span
-                    className="text-[11px] font-bold"
-                    style={{ color: weeklyFlow.weekNet >= 0 ? COLORS.success : COLORS.danger, ...latinFont }}
-                  >
-                    ${Math.abs(weeklyFlow.weekNet).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-end justify-between gap-1.5 h-14">
-                {weeklyFlow.days.map((d) => {
-                  const barHeight = Math.max(6, (Math.abs(d.net) / weeklyFlow.maxAbs) * 56);
-                  const positive = d.net >= 0;
-                  return (
-                    <div key={d.key} className="flex-1 h-full flex items-end justify-center">
-                      <div
-                        className="rounded-full"
-                        style={{
-                          width: 14,
-                          height: barHeight,
-                          background: positive
-                            ? 'linear-gradient(180deg, #34C77B, #1F9D6B)'
-                            : 'linear-gradient(180deg, #F0785C, #E5533D)',
-                          opacity: d.isToday ? 1 : 0.55,
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex justify-between gap-1.5 mt-1.5">
-                {weeklyFlow.days.map((d) => (
-                  <span
-                    key={d.key}
-                    className="flex-1 text-center text-[10px]"
-                    style={{ color: d.isToday ? COLORS.navy : COLORS.muted, fontWeight: d.isToday ? 700 : 500 }}
-                  >
-                    {d.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Actions — responsive grid so icons stay a
-               comfortable size on any phone width, from compact
-               iPhones up through the largest modern Android screens */}
-            <p className="text-sm font-bold mt-5 mb-2.5" style={{ color: COLORS.navy }}>
-              {lang === 'KH' ? 'មុខងាររហ័ស' : 'Quick Actions'}
-            </p>
-            <div
-              className="grid grid-cols-4 gap-x-2 gap-y-4 bg-white p-3.5 rounded-2xl"
-              style={{ boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
-            >
-              {[
-                {
-                  key: 'invoice',
-                  icon: Receipt,
-                  label: lang === 'KH' ? 'វិក្កយបត្រ' : 'Invoice',
-                  gradient: 'linear-gradient(135deg, #4EA1E8, #2E86C1)',
-                  onClick: () => setCurrentScreen('InvoiceOverview'),
-                  show: true,
-                },
-                {
-                  key: 'stock',
-                  icon: Package,
-                  label: lang === 'KH' ? 'ស្តុក' : 'Stock',
-                  gradient: 'linear-gradient(135deg, #22B491, #0F6E56)',
-                  onClick: () => setCurrentScreen('Stock'),
-                  show: profile?.stock_module_enabled ?? true,
-                },
-                {
-                  key: 'income',
-                  icon: TrendingUp,
-                  label: lang === 'KH' ? 'ចំណូល' : 'Income',
-                  gradient: 'linear-gradient(135deg, #34C77B, #1F9D6B)',
-                  onClick: () => openAddModal('income'),
-                  show: true,
-                },
-                {
-                  key: 'expense',
-                  icon: TrendingDown,
-                  label: lang === 'KH' ? 'ចំណាយ' : 'Expense',
-                  gradient: 'linear-gradient(135deg, #F0785C, #E5533D)',
-                  onClick: () => openAddModal('expense'),
-                  show: true,
-                },
-                {
-                  key: 'exchange',
-                  icon: Landmark,
-                  label: lang === 'KH' ? 'ប្តូរប្រាក់' : 'Exchange',
-                  gradient: `linear-gradient(135deg, ${COLORS.accentGold}, ${COLORS.accentGoldDark})`,
-                  onClick: () => setIsExchangeOpen(true),
-                  show: true,
-                },
-                {
-                  key: 'report',
-                  icon: BarChart3,
-                  label: lang === 'KH' ? 'របាយការណ៍' : 'Report',
-                  gradient: `linear-gradient(135deg, ${COLORS.navyGradientEnd}, ${COLORS.navyGradientStart})`,
-                  onClick: () => setCurrentScreen('Report'),
-                  show: true,
-                },
-                {
-                  key: 'customer',
-                  icon: Users,
-                  label: lang === 'KH' ? 'អតិថិជន' : 'Customer',
-                  gradient: 'linear-gradient(135deg, #6FB3EC, #2E86C1)',
-                  onClick: () => setCurrentScreen('Customer'),
-                  show: true,
-                },
-                {
-                  key: 'category',
-                  icon: Tag,
-                  label: lang === 'KH' ? 'ប្រភេទ' : 'Category',
-                  gradient: `linear-gradient(135deg, #F2B84B, ${COLORS.accentGoldDark})`,
-                  onClick: () => setCurrentScreen('Category'),
-                  show: true,
-                },
-              ]
-                .filter((a) => a.show)
-                .map((action) => (
-                  <button
-                    key={action.key}
-                    onClick={action.onClick}
-                    className="flex flex-col items-center min-w-0"
-                  >
-                    <div
-                      className="flex items-center justify-center rounded-2xl flex-shrink-0"
-                      style={{
-                        width: 50,
-                        height: 50,
-                        background: action.gradient,
-                        boxShadow: '0 4px 10px rgba(12,68,124,0.18)',
-                      }}
-                    >
-                      <action.icon size={22} color="#FFFFFF" strokeWidth={2.2} />
-                    </div>
-                    <span
-                      className="text-[11px] font-semibold mt-1.5 truncate w-full text-center"
-                      style={{ color: COLORS.navy }}
-                    >
-                      {action.label}
-                    </span>
-                  </button>
-                ))}
-            </div>
-
-            {/* Recent Transactions — short preview only; tap "see all"
-               for the full, scrollable list */}
-            <div className="flex items-center justify-between mt-5 mb-2">
-              <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
-                {lang === 'KH' ? 'ប្រតិបត្តិការចុងក្រោយ' : 'Recent Transactions'}
-              </p>
-              {transactions.length > 0 && (
-                <button
-                  onClick={() => setHomeShowAllTx(true)}
-                  className="flex items-center gap-0.5 text-[11px] font-bold"
-                  style={{ color: COLORS.gold }}
-                >
-                  {lang === 'KH' ? 'មើលទាំងអស់' : 'See all'}
-                  <ChevronRight size={13} color={COLORS.gold} strokeWidth={2.5} />
-                </button>
-              )}
-            </div>
-            <div className="bg-white rounded-2xl py-1" style={{ boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}>
-              {transactionsLoading && (
-                <p className="text-xs text-center py-4" style={{ color: COLORS.muted }}>
-                  {lang === 'KH' ? 'កំពុងផ្ទុក...' : 'Loading...'}
-                </p>
-              )}
-              {!transactionsLoading && transactions.length === 0 && (
-                <p className="text-xs text-center py-4" style={{ color: COLORS.muted }}>
-                  {lang === 'KH' ? 'មិនទាន់មានប្រតិបត្តិការនៅឡើយទេ' : 'No transactions yet'}
-                </p>
-              )}
-              {transactions.slice(0, 5).map((tItem, i, arr) => (
-                <div
-                  key={tItem.id}
-                  className="flex items-center px-3.5 py-2.5"
-                  style={{
-                    borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.border}` : 'none',
-                  }}
-                >
-                  <div className="mr-3">
-                    <IconBadge
-                      icon={tItem.type === 'income' ? TrendingUp : TrendingDown}
-                      size={INLINE}
-                      tint={tItem.type === 'income' ? 'success' : 'danger'}
-                      shape="rounded"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold truncate" style={{ color: COLORS.navy }}>
-                      {tItem.description}
-                    </p>
-                    <p className="text-xs truncate" style={{ color: COLORS.muted }}>
-                      {tItem.quantity} {tItem.unit} • {tItem.transaction_date}
-                    </p>
-                  </div>
-                  <span
-                    className="text-sm font-bold flex-shrink-0 ml-2"
-                    style={{
-                      color: tItem.type === 'income' ? COLORS.success : COLORS.danger,
-                      ...latinFont,
-                    }}
-                  >
-                    {moneyDisplay(tItem)}
-                  </span>
-                </div>
-              ))}
-              {transactions.length > 5 && (
-                <button
-                  onClick={() => setHomeShowAllTx(true)}
-                  className="w-full flex items-center justify-center gap-1 py-2.5 text-xs font-bold"
-                  style={{ color: COLORS.navy, borderTop: `1px solid ${COLORS.border}` }}
-                >
-                  {lang === 'KH'
-                    ? `មើលទាំងអស់ (${toKhmerNumber(transactions.length)})`
-                    : `View all ${transactions.length}`}
-                  <ChevronRight size={13} color={COLORS.navy} strokeWidth={2.5} />
-                </button>
-              )}
-            </div>
           </div>
           </div>
           </div>
