@@ -278,6 +278,8 @@ export default function App() {
   // Dedicated full-screen "see everything" view — separate from the
   // dashboard, always scrollable top to bottom.
   const [homeShowAllTx, setHomeShowAllTx] = useState(false);
+  const [showBalance, setShowBalance] = useState(true);
+  const [homeStatsTab, setHomeStatsTab] = useState<'today' | 'month'>('today');
   const [financeShowAllTx, setFinanceShowAllTx] = useState(false);
 
   const loadProfile = async (userId: string): Promise<Profile | null> => {
@@ -437,6 +439,34 @@ export default function App() {
     month: 'long',
     year: 'numeric',
   });
+
+  // Today-only totals for the Home screen Today/Month stats toggle.
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const todayTransactions = useMemo(
+    () => transactions.filter((t) => t.transaction_date === todayStr),
+    [transactions, todayStr]
+  );
+  const todayTotals = useMemo(() => computeTotals(todayTransactions), [todayTransactions]);
+  const todayLabel = now.toLocaleDateString(lang === 'KH' ? 'km-KH' : 'en-US', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+
+  // Time-of-day greeting shown at the top of the Home screen.
+  const currentHour = now.getHours();
+  const greeting =
+    lang === 'KH'
+      ? currentHour < 12
+        ? 'អរុណសួស្តី'
+        : currentHour < 18
+        ? 'ទិវាសួស្តី'
+        : 'សាយណ្ហសួស្តី'
+      : currentHour < 12
+      ? 'Good morning'
+      : currentHour < 18
+      ? 'Good afternoon'
+      : 'Good evening';
 
   // Last 7 days of cash flow for the Home screen "pulse" widget.
   // Both currencies are folded into a single USD-equivalent figure
@@ -936,8 +966,12 @@ export default function App() {
      ============================================ */
   const TabBar = () => (
     <div
-      className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t flex items-center justify-around"
-      style={{ borderColor: COLORS.border }}
+      className="fixed bottom-0 left-0 right-0 bg-white border-t flex items-center justify-around"
+      style={{
+        borderColor: COLORS.border,
+        height: 'calc(4rem + env(safe-area-inset-bottom))',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
     >
       <button onClick={() => setCurrentScreen('Home')} className="flex flex-col items-center flex-1">
         <IconBadge
@@ -1478,33 +1512,41 @@ export default function App() {
         <div className="h-[100dvh] flex flex-col overflow-hidden" style={{ backgroundColor: COLORS.bgApp }}>
           {/* Header */}
           <div
-            className="px-4 pt-4 pb-4"
+            className="px-4 pb-5 relative overflow-hidden"
             style={{
-              background: `linear-gradient(135deg, ${COLORS.navyGradientStart}, ${COLORS.navyGradientEnd})`,
+              background: `linear-gradient(160deg, ${COLORS.navyGradientStart}, ${COLORS.navyGradientEnd})`,
+              paddingTop: 'max(0.9rem, env(safe-area-inset-top))',
             }}
           >
-            <div className="flex justify-between items-center">
-              <div className="flex items-center flex-1">
+            {/* soft decorative glow so the header doesn't look flat */}
+            <div
+              className="pointer-events-none absolute rounded-full"
+              style={{ width: 180, height: 180, top: -90, right: -60, background: 'rgba(255,255,255,0.06)' }}
+            />
+            <div
+              className="pointer-events-none absolute rounded-full"
+              style={{ width: 110, height: 110, top: 20, left: -50, background: 'rgba(255,255,255,0.05)' }}
+            />
+            <div className="relative flex justify-between items-center">
+              <div className="flex items-center flex-1 min-w-0">
                 {profile?.avatar_url ? (
                   <div
-                    className="rounded-xl overflow-hidden flex-shrink-0"
-                    style={{ width: 44, height: 44 }}
+                    className="rounded-2xl overflow-hidden flex-shrink-0"
+                    style={{ width: 46, height: 46, boxShadow: '0 0 0 2px rgba(255,255,255,0.35)' }}
                   >
                     <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                   </div>
                 ) : (
                   <IconBadge icon={ImageIcon} size={INLINE} tint="light" shape="rounded" />
                 )}
-                <div className="ml-2.5">
-                  <p className="text-sm font-bold text-white">
+                <div className="ml-2.5 min-w-0">
+                  <p className="text-[11px] font-semibold text-white/70 truncate">{greeting}</p>
+                  <p className="text-sm font-bold text-white truncate">
                     {profile?.business_name || '...'}
-                  </p>
-                  <p className="text-xs text-white/70" style={latinFont}>
-                    {profile?.phone || ''}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button
                   onClick={() => setLang(lang === 'KH' ? 'EN' : 'KH')}
                   className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
@@ -1518,14 +1560,14 @@ export default function App() {
                 <IconBtn icon={LogOut} tint="light" onClick={handleLogout} aria-label="Logout" />
               </div>
             </div>
-            <div className="flex items-center justify-between mt-2.5 gap-2">
-              <p className="text-xs font-semibold text-white/80 truncate min-w-0">
+            <div className="relative flex items-center justify-between mt-3.5 gap-2">
+              <p className="text-[11px] font-semibold text-white/75 truncate min-w-0" style={latinFont}>
                 {new Date().toLocaleDateString(lang === 'KH' ? 'km-KH' : 'en-US', {
                   weekday: 'long',
                   day: 'numeric',
                   month: 'long',
                 })}{' '}
-                | {timeStr}
+                • {timeStr}
               </p>
               <button
                 onClick={() => setHomeShowAllTx(true)}
@@ -1580,38 +1622,53 @@ export default function App() {
              Use the "Transactions" pill above to see everything in
              a dedicated, fully scrollable full-screen view. */}
           <div className="relative flex-1 min-h-0">
-          <div className="app-scroll h-full overflow-hidden p-3.5 pb-24">
+          <div className="app-scroll h-full overflow-y-auto overflow-x-hidden p-3.5 pb-24">
+          <div className="mx-auto w-full" style={{ maxWidth: 520 }}>
             {/* Balance card */}
             <div
-              className="relative p-6 rounded-3xl overflow-hidden"
+              className="relative p-6 rounded-[28px] overflow-hidden"
               style={{
                 background: `linear-gradient(135deg, ${COLORS.navyGradientStart}, ${COLORS.navyGradientEnd})`,
-                boxShadow: '0 8px 20px rgba(12,68,124,0.28), 0 2px 6px rgba(12,68,124,0.15)',
+                boxShadow: '0 10px 24px rgba(12,68,124,0.30), 0 2px 6px rgba(12,68,124,0.15)',
               }}
             >
               <div
                 className="absolute rounded-full"
-                style={{ width: 140, height: 140, top: -50, right: -40, background: 'rgba(255,255,255,0.06)' }}
+                style={{ width: 150, height: 150, top: -55, right: -45, background: 'rgba(255,255,255,0.06)' }}
               />
               <div
                 className="absolute rounded-full"
-                style={{ width: 90, height: 90, bottom: -35, right: 30, background: 'rgba(255,255,255,0.05)' }}
+                style={{ width: 95, height: 95, bottom: -35, right: 35, background: 'rgba(255,255,255,0.05)' }}
               />
               <div className="relative flex items-start justify-between">
                 <p className="text-xs font-semibold text-white/80 tracking-wide">
-                  {lang === 'KH' ? 'សមតុល្យសរុប (Total Balance)' : 'Total Balance'}
+                  {lang === 'KH' ? 'សមតុល្យសរុប' : 'Total Balance'}
                 </p>
-                <div
-                  className="flex items-center justify-center rounded-xl"
-                  style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.15)' }}
-                >
-                  <CreditCard size={18} className="text-white" />
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setShowBalance((v) => !v)}
+                    aria-label={lang === 'KH' ? 'លាក់/បង្ហាញសមតុល្យ' : 'Show/hide balance'}
+                    className="flex items-center justify-center rounded-xl"
+                    style={{ width: 32, height: 32, background: 'rgba(255,255,255,0.15)' }}
+                  >
+                    {showBalance ? (
+                      <Eye size={16} className="text-white" />
+                    ) : (
+                      <EyeOff size={16} className="text-white" />
+                    )}
+                  </button>
+                  <div
+                    className="flex items-center justify-center rounded-xl"
+                    style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.15)' }}
+                  >
+                    <CreditCard size={18} className="text-white" />
+                  </div>
                 </div>
               </div>
 
               {/* Split by currency: USD + KHR, each with its own icon */}
-              <div className="relative flex items-center gap-3 mt-3">
-                <div className="flex items-center gap-2 flex-1">
+              <div className="relative flex items-center gap-3 mt-3.5">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div
                     className="flex items-center justify-center rounded-lg flex-shrink-0"
                     style={{ width: 30, height: 30, background: 'rgba(255,255,255,0.16)' }}
@@ -1621,12 +1678,14 @@ export default function App() {
                   <div className="min-w-0">
                     <p className="text-[10px] text-white/65">USD</p>
                     <p className="text-lg font-extrabold text-white truncate" style={latinFont}>
-                      ${balanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {showBalance
+                        ? `$${balanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        : '••••••'}
                     </p>
                   </div>
                 </div>
                 <div className="w-px self-stretch" style={{ background: 'rgba(255,255,255,0.18)' }} />
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div
                     className="flex items-center justify-center rounded-lg flex-shrink-0"
                     style={{ width: 30, height: 30, background: 'rgba(255,255,255,0.16)' }}
@@ -1636,106 +1695,141 @@ export default function App() {
                   <div className="min-w-0">
                     <p className="text-[10px] text-white/65">KHR</p>
                     <p className="text-lg font-extrabold text-white truncate" style={latinFont}>
-                      {balanceKHR.toLocaleString()} ៛
+                      {showBalance ? `${balanceKHR.toLocaleString()} ៛` : '••••••'}
                     </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Monthly statistics — bar chart */}
-            <div
-              className="p-4 rounded-2xl mt-5"
-              style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
-            >
-              <div className="flex items-center gap-2 mb-3.5">
-                <BarChart3 size={16} style={{ color: COLORS.navy }} />
+            {/* Today / Month overview — segmented toggle so the most
+               important numbers (daily + monthly) are one tap apart */}
+            <div className="mt-5">
+              <div className="flex items-center justify-between mb-2.5">
                 <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
-                  {lang === 'KH' ? `ស្ថិតិសរុប — ${monthLabel}` : `Monthly Statistics — ${monthLabel}`}
+                  {lang === 'KH' ? 'ទិន្នន័យសង្ខេប' : 'Overview'}
                 </p>
+                <div
+                  className="flex items-center rounded-full p-0.5 flex-shrink-0"
+                  style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
+                >
+                  <button
+                    onClick={() => setHomeStatsTab('today')}
+                    className="px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors"
+                    style={{
+                      backgroundColor: homeStatsTab === 'today' ? COLORS.navy : 'transparent',
+                      color: homeStatsTab === 'today' ? '#FFFFFF' : COLORS.muted,
+                    }}
+                  >
+                    {lang === 'KH' ? 'ថ្ងៃនេះ' : 'Today'}
+                  </button>
+                  <button
+                    onClick={() => setHomeStatsTab('month')}
+                    className="px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors"
+                    style={{
+                      backgroundColor: homeStatsTab === 'month' ? COLORS.navy : 'transparent',
+                      color: homeStatsTab === 'month' ? '#FFFFFF' : COLORS.muted,
+                    }}
+                  >
+                    {lang === 'KH' ? 'ខែនេះ' : 'Month'}
+                  </button>
+                </div>
               </div>
 
-              {/* Income vs Expense bar chart */}
-              {(() => {
-                const maxVal = Math.max(monthTotals.incomeUSD, monthTotals.expenseUSD, 1);
-                const incomePct = Math.min(100, (monthTotals.incomeUSD / maxVal) * 100);
-                const expensePct = Math.min(100, (monthTotals.expenseUSD / maxVal) * 100);
-                return (
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs font-semibold" style={{ color: COLORS.navy }}>
-                          {lang === 'KH' ? 'ចំណូលខែនេះ' : 'Income'}
-                        </span>
-                        <span className="text-xs font-bold" style={{ color: COLORS.success, ...latinFont }}>
-                          {formatMoney(monthTotals.incomeUSD, monthTotals.incomeKHR)}
-                        </span>
-                      </div>
-                      <div className="w-full h-2.5 rounded-full" style={{ backgroundColor: COLORS.successTint }}>
-                        <div
-                          className="h-2.5 rounded-full"
-                          style={{
-                            width: `${incomePct}%`,
-                            background: 'linear-gradient(90deg, #34C77B, #1F9D6B)',
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs font-semibold" style={{ color: COLORS.navy }}>
-                          {lang === 'KH' ? 'ចំណាយខែនេះ' : 'Expense'}
-                        </span>
-                        <span className="text-xs font-bold" style={{ color: COLORS.danger, ...latinFont }}>
-                          {formatMoney(monthTotals.expenseUSD, monthTotals.expenseKHR)}
-                        </span>
-                      </div>
-                      <div className="w-full h-2.5 rounded-full" style={{ backgroundColor: COLORS.dangerTint }}>
-                        <div
-                          className="h-2.5 rounded-full"
-                          style={{
-                            width: `${expensePct}%`,
-                            background: 'linear-gradient(90deg, #F0785C, #E5533D)',
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Invoices / Stock quick counts */}
-              <div className="flex gap-2.5 mt-4 pt-3.5" style={{ borderTop: `1px solid ${COLORS.border}` }}>
-                <div className="flex-1 flex items-center gap-2">
-                  <div
-                    className="flex items-center justify-center rounded-lg flex-shrink-0"
-                    style={{ width: 28, height: 28, backgroundColor: COLORS.invoiceTint }}
-                  >
-                    <Receipt size={14} style={{ color: COLORS.invoice }} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px]" style={{ color: COLORS.muted }}>
-                      {lang === 'KH' ? 'វិក្កយបត្រខែនេះ' : 'Invoices'}
-                    </p>
-                    <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
-                      {invoiceCount === null ? '...' : invoiceCount}
-                    </p>
-                  </div>
+              <div
+                className="p-4 rounded-2xl"
+                style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
+              >
+                <div className="flex items-center gap-2 mb-3.5">
+                  <BarChart3 size={16} style={{ color: COLORS.navy }} />
+                  <p className="text-xs font-bold" style={{ color: COLORS.muted }}>
+                    {homeStatsTab === 'today' ? todayLabel : monthLabel}
+                  </p>
                 </div>
-                <div className="flex-1 flex items-center gap-2">
-                  <div
-                    className="flex items-center justify-center rounded-lg flex-shrink-0"
-                    style={{ width: 28, height: 28, backgroundColor: COLORS.stockTint }}
-                  >
-                    <Package size={14} style={{ color: COLORS.stock }} />
+
+                {/* Income vs Expense bar chart */}
+                {(() => {
+                  const activeTotals = homeStatsTab === 'today' ? todayTotals : monthTotals;
+                  const maxVal = Math.max(activeTotals.incomeUSD, activeTotals.expenseUSD, 1);
+                  const incomePct = Math.min(100, (activeTotals.incomeUSD / maxVal) * 100);
+                  const expensePct = Math.min(100, (activeTotals.expenseUSD / maxVal) * 100);
+                  return (
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-semibold" style={{ color: COLORS.navy }}>
+                            {lang === 'KH' ? 'ចំណូល' : 'Income'}
+                          </span>
+                          <span className="text-xs font-bold" style={{ color: COLORS.success, ...latinFont }}>
+                            {formatMoney(activeTotals.incomeUSD, activeTotals.incomeKHR)}
+                          </span>
+                        </div>
+                        <div className="w-full h-2.5 rounded-full" style={{ backgroundColor: COLORS.successTint }}>
+                          <div
+                            className="h-2.5 rounded-full transition-all"
+                            style={{
+                              width: `${incomePct}%`,
+                              background: 'linear-gradient(90deg, #34C77B, #1F9D6B)',
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-semibold" style={{ color: COLORS.navy }}>
+                            {lang === 'KH' ? 'ចំណាយ' : 'Expense'}
+                          </span>
+                          <span className="text-xs font-bold" style={{ color: COLORS.danger, ...latinFont }}>
+                            {formatMoney(activeTotals.expenseUSD, activeTotals.expenseKHR)}
+                          </span>
+                        </div>
+                        <div className="w-full h-2.5 rounded-full" style={{ backgroundColor: COLORS.dangerTint }}>
+                          <div
+                            className="h-2.5 rounded-full transition-all"
+                            style={{
+                              width: `${expensePct}%`,
+                              background: 'linear-gradient(90deg, #F0785C, #E5533D)',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Invoices / Stock quick counts */}
+                <div className="flex gap-2.5 mt-4 pt-3.5" style={{ borderTop: `1px solid ${COLORS.border}` }}>
+                  <div className="flex-1 flex items-center gap-2 min-w-0">
+                    <div
+                      className="flex items-center justify-center rounded-lg flex-shrink-0"
+                      style={{ width: 28, height: 28, backgroundColor: COLORS.invoiceTint }}
+                    >
+                      <Receipt size={14} style={{ color: COLORS.invoice }} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
+                        {lang === 'KH' ? 'វិក្កយបត្រខែនេះ' : 'Invoices'}
+                      </p>
+                      <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
+                        {invoiceCount === null ? '...' : invoiceCount}
+                      </p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px]" style={{ color: COLORS.muted }}>
-                      {lang === 'KH' ? 'ស្តុកបច្ចុប្បន្ន' : 'Stock'}
-                    </p>
-                    <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
-                      {productCount === null ? '...' : productCount}
-                    </p>
+                  <div className="flex-1 flex items-center gap-2 min-w-0">
+                    <div
+                      className="flex items-center justify-center rounded-lg flex-shrink-0"
+                      style={{ width: 28, height: 28, backgroundColor: COLORS.stockTint }}
+                    >
+                      <Package size={14} style={{ color: COLORS.stock }} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
+                        {lang === 'KH' ? 'ស្តុកបច្ចុប្បន្ន' : 'Stock'}
+                      </p>
+                      <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
+                        {productCount === null ? '...' : productCount}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1812,82 +1906,108 @@ export default function App() {
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <p className="text-sm font-bold mt-5 mb-2" style={{ color: COLORS.navy }}>
+            {/* Quick Actions — responsive grid so icons stay a
+               comfortable size on any phone width, from compact
+               iPhones up through the largest modern Android screens */}
+            <p className="text-sm font-bold mt-5 mb-2.5" style={{ color: COLORS.navy }}>
               {lang === 'KH' ? 'មុខងាររហ័ស' : 'Quick Actions'}
             </p>
             <div
-              className="flex justify-between bg-white p-3 rounded-2xl"
+              className="grid grid-cols-4 gap-x-2 gap-y-4 bg-white p-3.5 rounded-2xl"
               style={{ boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
             >
-              <button onClick={() => setCurrentScreen('InvoiceOverview')} className="flex flex-col items-center flex-1">
-                <IconBadge icon={Receipt} size={ACTION} tint="invoice" shape="rounded" />
-                <span className="text-xs mt-1.5" style={{ color: COLORS.navy }}>
-                  {lang === 'KH' ? 'វិក្កយបត្រ' : 'Invoice'}
-                </span>
-              </button>
-              {(profile?.stock_module_enabled ?? true) && (
-                <button onClick={() => setCurrentScreen('Stock')} className="flex flex-col items-center flex-1">
-                  <IconBadge icon={Package} size={ACTION} tint="stock" shape="rounded" />
-                  <span className="text-xs mt-1.5" style={{ color: COLORS.navy }}>
-                    {lang === 'KH' ? 'ស្តុក' : 'Stock'}
-                  </span>
-                </button>
-              )}
-              <button
-                onClick={() => openAddModal('income')}
-                className="flex flex-col items-center flex-1"
-              >
-                <IconBadge icon={TrendingUp} size={ACTION} tint="success" shape="rounded" />
-                <span className="text-xs mt-1.5" style={{ color: COLORS.navy }}>
-                  {lang === 'KH' ? 'ចំណូល' : 'Income'}
-                </span>
-              </button>
-              <button
-                onClick={() => openAddModal('expense')}
-                className="flex flex-col items-center flex-1"
-              >
-                <IconBadge icon={TrendingDown} size={ACTION} tint="danger" shape="rounded" />
-                <span className="text-xs mt-1.5" style={{ color: COLORS.navy }}>
-                  {lang === 'KH' ? 'ចំណាយ' : 'Expense'}
-                </span>
-              </button>
-              <button
-                onClick={() => setIsExchangeOpen(true)}
-                className="flex flex-col items-center flex-1"
-              >
-                <IconBadge icon={Landmark} size={ACTION} tint="gold" shape="rounded" />
-                <span className="text-xs mt-1.5" style={{ color: COLORS.navy }}>
-                  {lang === 'KH' ? 'ប្តូរប្រាក់' : 'Exchange'}
-                </span>
-              </button>
-              <button
-                onClick={() => setCurrentScreen('Report')}
-                className="flex flex-col items-center flex-1"
-              >
-                <IconBadge icon={BarChart3} size={ACTION} tint="navy" shape="rounded" />
-                <span className="text-xs mt-1.5" style={{ color: COLORS.navy }}>
-                  {lang === 'KH' ? 'របាយការណ៍' : 'Report'}
-                </span>
-              </button>
-              <button
-                onClick={() => setCurrentScreen('Customer')}
-                className="flex flex-col items-center flex-1"
-              >
-                <IconBadge icon={Users} size={ACTION} tint="invoice" shape="rounded" />
-                <span className="text-xs mt-1.5" style={{ color: COLORS.navy }}>
-                  {lang === 'KH' ? 'អតិថិជន' : 'Customer'}
-                </span>
-              </button>
-              <button
-                onClick={() => setCurrentScreen('Category')}
-                className="flex flex-col items-center flex-1"
-              >
-                <IconBadge icon={Tag} size={ACTION} tint="gold" shape="rounded" />
-                <span className="text-xs mt-1.5" style={{ color: COLORS.navy }}>
-                  {lang === 'KH' ? 'ប្រភេទ' : 'Category'}
-                </span>
-              </button>
+              {[
+                {
+                  key: 'invoice',
+                  icon: Receipt,
+                  label: lang === 'KH' ? 'វិក្កយបត្រ' : 'Invoice',
+                  gradient: 'linear-gradient(135deg, #4EA1E8, #2E86C1)',
+                  onClick: () => setCurrentScreen('InvoiceOverview'),
+                  show: true,
+                },
+                {
+                  key: 'stock',
+                  icon: Package,
+                  label: lang === 'KH' ? 'ស្តុក' : 'Stock',
+                  gradient: 'linear-gradient(135deg, #22B491, #0F6E56)',
+                  onClick: () => setCurrentScreen('Stock'),
+                  show: profile?.stock_module_enabled ?? true,
+                },
+                {
+                  key: 'income',
+                  icon: TrendingUp,
+                  label: lang === 'KH' ? 'ចំណូល' : 'Income',
+                  gradient: 'linear-gradient(135deg, #34C77B, #1F9D6B)',
+                  onClick: () => openAddModal('income'),
+                  show: true,
+                },
+                {
+                  key: 'expense',
+                  icon: TrendingDown,
+                  label: lang === 'KH' ? 'ចំណាយ' : 'Expense',
+                  gradient: 'linear-gradient(135deg, #F0785C, #E5533D)',
+                  onClick: () => openAddModal('expense'),
+                  show: true,
+                },
+                {
+                  key: 'exchange',
+                  icon: Landmark,
+                  label: lang === 'KH' ? 'ប្តូរប្រាក់' : 'Exchange',
+                  gradient: `linear-gradient(135deg, ${COLORS.accentGold}, ${COLORS.accentGoldDark})`,
+                  onClick: () => setIsExchangeOpen(true),
+                  show: true,
+                },
+                {
+                  key: 'report',
+                  icon: BarChart3,
+                  label: lang === 'KH' ? 'របាយការណ៍' : 'Report',
+                  gradient: `linear-gradient(135deg, ${COLORS.navyGradientEnd}, ${COLORS.navyGradientStart})`,
+                  onClick: () => setCurrentScreen('Report'),
+                  show: true,
+                },
+                {
+                  key: 'customer',
+                  icon: Users,
+                  label: lang === 'KH' ? 'អតិថិជន' : 'Customer',
+                  gradient: 'linear-gradient(135deg, #6FB3EC, #2E86C1)',
+                  onClick: () => setCurrentScreen('Customer'),
+                  show: true,
+                },
+                {
+                  key: 'category',
+                  icon: Tag,
+                  label: lang === 'KH' ? 'ប្រភេទ' : 'Category',
+                  gradient: `linear-gradient(135deg, #F2B84B, ${COLORS.accentGoldDark})`,
+                  onClick: () => setCurrentScreen('Category'),
+                  show: true,
+                },
+              ]
+                .filter((a) => a.show)
+                .map((action) => (
+                  <button
+                    key={action.key}
+                    onClick={action.onClick}
+                    className="flex flex-col items-center min-w-0"
+                  >
+                    <div
+                      className="flex items-center justify-center rounded-2xl flex-shrink-0"
+                      style={{
+                        width: 50,
+                        height: 50,
+                        background: action.gradient,
+                        boxShadow: '0 4px 10px rgba(12,68,124,0.18)',
+                      }}
+                    >
+                      <action.icon size={22} color="#FFFFFF" strokeWidth={2.2} />
+                    </div>
+                    <span
+                      className="text-[11px] font-semibold mt-1.5 truncate w-full text-center"
+                      style={{ color: COLORS.navy }}
+                    >
+                      {action.label}
+                    </span>
+                  </button>
+                ))}
             </div>
 
             {/* Recent Transactions — short preview only; tap "see all"
@@ -1934,16 +2054,16 @@ export default function App() {
                       shape="rounded"
                     />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold" style={{ color: COLORS.navy }}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold truncate" style={{ color: COLORS.navy }}>
                       {tItem.description}
                     </p>
-                    <p className="text-xs" style={{ color: COLORS.muted }}>
+                    <p className="text-xs truncate" style={{ color: COLORS.muted }}>
                       {tItem.quantity} {tItem.unit} • {tItem.transaction_date}
                     </p>
                   </div>
                   <span
-                    className="text-sm font-bold"
+                    className="text-sm font-bold flex-shrink-0 ml-2"
                     style={{
                       color: tItem.type === 'income' ? COLORS.success : COLORS.danger,
                       ...latinFont,
@@ -1966,6 +2086,7 @@ export default function App() {
                 </button>
               )}
             </div>
+          </div>
           </div>
           </div>
 
