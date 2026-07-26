@@ -4,6 +4,7 @@ import { COLORS } from '../lib/theme';
 
 interface Props {
   lang: 'KH' | 'EN';
+  compact?: boolean;
 }
 
 interface Slide {
@@ -47,7 +48,7 @@ const SLIDES: Slide[] = [
 
 const AUTOPLAY_MS = 3200;
 
-export default function AuthFeatureCarousel({ lang }: Props) {
+export default function AuthFeatureCarousel({ lang, compact }: Props) {
   const tr = (kh: string, en: string) => (lang === 'KH' ? kh : en);
   const [active, setActive] = useState(0);
 
@@ -65,7 +66,7 @@ export default function AuthFeatureCarousel({ lang }: Props) {
 
   return (
     <div
-      className="w-full max-w-sm rounded-2xl overflow-hidden relative mt-4"
+      className={`w-full rounded-2xl overflow-hidden relative ${compact ? '' : 'max-w-sm mt-4'}`}
       style={{
         background: `linear-gradient(135deg, ${COLORS.navyGradientStart} 0%, ${COLORS.navyGradientEnd} 100%)`,
         boxShadow: '0 6px 18px rgba(12,68,124,0.16)',
@@ -77,25 +78,27 @@ export default function AuthFeatureCarousel({ lang }: Props) {
         style={{ width: 110, height: 110, top: -35, right: -25, background: 'rgba(255,255,255,0.07)' }}
       />
 
-      <div className="flex items-center gap-3 px-4 py-3.5 relative">
+      <div className={`flex items-center gap-2.5 px-3.5 relative ${compact ? 'py-2.5' : 'py-3.5'}`}>
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300"
+          className={`rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${compact ? 'w-8 h-8' : 'w-10 h-10'}`}
           style={{ backgroundColor: 'rgba(255,255,255,0.16)' }}
         >
-          <Icon size={20} color="#FFFFFF" strokeWidth={2} />
+          <Icon size={compact ? 16 : 20} color="#FFFFFF" strokeWidth={2} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-bold text-white leading-tight">
+          <p className={`font-bold text-white leading-tight ${compact ? 'text-[12px]' : 'text-[13px]'}`}>
             {tr(slide.titleKh, slide.titleEn)}
           </p>
-          <p className="text-[11px] text-white/75 leading-relaxed mt-0.5">
-            {tr(slide.descKh, slide.descEn)}
-          </p>
+          {!compact && (
+            <p className="text-[11px] text-white/75 leading-relaxed mt-0.5">
+              {tr(slide.descKh, slide.descEn)}
+            </p>
+          )}
         </div>
       </div>
 
       {/* Progress dots */}
-      <div className="flex gap-1.5 px-4 pb-2.5 justify-center relative">
+      <div className={`flex gap-1.5 px-3.5 justify-center relative ${compact ? 'pb-1.5' : 'pb-2.5'}`}>
         {SLIDES.map((_, i) => (
           <span
             key={i}
