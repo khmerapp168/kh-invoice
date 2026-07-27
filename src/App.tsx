@@ -50,7 +50,7 @@ import { COLORS, khmerFont, latinFont, DEFAULT_UNITS } from './lib/theme';
 import InstallScreen from './components/InstallScreen';
 import FeatureBanner from './components/FeatureBanner';
 import AuthFeatureCarousel from './components/AuthFeatureCarousel';
-import logoIcon from './assets/logo-icon.png';
+import logoFull from './assets/logo-full.png';
 
 
 
@@ -1090,31 +1090,16 @@ export default function App() {
             <Send size={16} color={COLORS.gold} strokeWidth={2} />
           </button>
 
-          {/* Logo — no card, big and centered, description below */}
+          {/* Logo — the new lockup already includes the wordmark, so it sits
+             directly on the page with no card behind it */}
           <div className="flex flex-col items-center mt-2 mb-1">
-            <div
-              className="rounded-[30px] flex items-center justify-center relative"
-              style={{
-                width: 132,
-                height: 132,
-                background: `linear-gradient(150deg, #FFFFFF 0%, ${COLORS.navyTint} 100%)`,
-                boxShadow: '0 14px 32px rgba(12,68,124,0.18)',
-              }}
-            >
-              <img
-                src={logoIcon}
-                alt="KH Invoice"
-                className="w-[92px] h-[92px] object-contain"
-              />
-            </div>
+            <img
+              src={logoFull}
+              alt="KH Invoice — Digital Invoicing Solutions"
+              className="w-[240px] object-contain"
+            />
             <span
-              className="text-[28px] font-extrabold tracking-wide mt-3"
-              style={{ color: COLORS.navy, ...latinFont }}
-            >
-              KH INVOICE
-            </span>
-            <span
-              className="text-xs text-center mt-1 leading-relaxed max-w-[260px]"
+              className="text-xs text-center mt-2 leading-relaxed max-w-[260px]"
               style={{ color: COLORS.muted }}
             >
               {t.tagline}
@@ -1257,31 +1242,15 @@ export default function App() {
             <Send size={16} color={COLORS.gold} strokeWidth={2} />
           </button>
 
-          {/* Logo — no card, big and centered, description below */}
+          {/* Logo — same treatment as Sign In: no card, logo lockup alone */}
           <div className="flex flex-col items-center mt-2 mb-1">
-            <div
-              className="rounded-[26px] flex items-center justify-center relative"
-              style={{
-                width: 108,
-                height: 108,
-                background: `linear-gradient(150deg, #FFFFFF 0%, ${COLORS.navyTint} 100%)`,
-                boxShadow: '0 12px 28px rgba(12,68,124,0.18)',
-              }}
-            >
-              <img
-                src={logoIcon}
-                alt="KH Invoice"
-                className="w-[76px] h-[76px] object-contain"
-              />
-            </div>
+            <img
+              src={logoFull}
+              alt="KH Invoice — Digital Invoicing Solutions"
+              className="w-[240px] object-contain"
+            />
             <span
-              className="text-2xl font-extrabold tracking-wide mt-3"
-              style={{ color: COLORS.navy, ...latinFont }}
-            >
-              KH INVOICE
-            </span>
-            <span
-              className="text-xs text-center mt-1 leading-relaxed max-w-[260px]"
+              className="text-xs text-center mt-2 leading-relaxed max-w-[260px]"
               style={{ color: COLORS.muted }}
             >
               {t.tagline}
