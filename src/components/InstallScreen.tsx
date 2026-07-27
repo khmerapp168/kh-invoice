@@ -13,9 +13,9 @@ import {
   ChevronRight,
   X,
 } from 'lucide-react';
-import { COLORS, khmerFont, latinFont } from '../lib/theme';
+import { COLORS, khmerFont } from '../lib/theme';
 import { IconBadge } from './IconBadge';
-import logoIcon from '../assets/logo-icon.png';
+import logoFull from '../assets/logo-full.png';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -167,26 +167,25 @@ export default function InstallScreen({ lang, onLangToggle, onSignIn, onSignUp, 
         </button>
       </div>
 
-      {/* Hero — logo big & centered, no card, description below */}
+      {/* Hero — logo lockup on a soft glow (not a flat white card) so the
+         navy wordmark stays readable on this screen's dark gradient */}
       <div className="flex flex-col items-center px-6 pt-5 pb-2 relative z-10">
-        <div
-          className="rounded-[30px] flex items-center justify-center relative"
-          style={{
-            width: 124,
-            height: 124,
-            background: 'rgba(255,255,255,0.96)',
-            boxShadow: '0 16px 36px rgba(0,0,0,0.24)',
-          }}
-        >
-          <img src={logoIcon} alt="KH Invoice" className="w-[86px] h-[86px] object-contain" />
+        <div className="relative flex items-center justify-center" style={{ width: 260, height: 150 }}>
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: 240,
+              height: 130,
+              background: 'radial-gradient(ellipse, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 45%, rgba(255,255,255,0) 75%)',
+              filter: 'blur(6px)',
+            }}
+          />
+          <img
+            src={logoFull}
+            alt="KH Invoice — Digital Invoicing Solutions"
+            className="relative w-[220px] object-contain"
+          />
         </div>
-
-        <span
-          className="text-[30px] font-extrabold text-white leading-none mt-4"
-          style={{ ...latinFont, letterSpacing: '0.06em' }}
-        >
-          KH INVOICE
-        </span>
 
         <p className="text-[12px] font-medium text-white/80 text-center leading-relaxed mt-2 max-w-[280px]">
           {tr(
