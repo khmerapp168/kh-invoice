@@ -30,12 +30,9 @@ import {
   Clock,
   Maximize2,
   HelpCircle,
-  Activity,
-  ArrowUpRight,
-  ArrowDownRight,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Users, Tag } from 'lucide-react';
+import { Users, Tag, HandCoins, Store } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 import { IconBadge } from './components/IconBadge';
 import InvoiceScreen from './components/InvoiceScreen';
@@ -46,6 +43,8 @@ import AccountScreen from './components/AccountScreen';
 import ReportScreen from './components/ReportScreen';
 import CustomerScreen from './components/CustomerScreen';
 import CategoryScreen from './components/CategoryScreen';
+import CustomerDebtScreen from './components/CustomerDebtScreen';
+import SupplierDebtScreen from './components/SupplierDebtScreen';
 import { COLORS, khmerFont, latinFont, DEFAULT_UNITS } from './lib/theme';
 import InstallScreen from './components/InstallScreen';
 import FeatureBanner from './components/FeatureBanner';
@@ -56,14 +55,12 @@ import logoFull from './assets/logo-full.png';
 
 
 
-const WEEKDAY_SHORT_KH = ['អា', 'ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស'];
-const WEEKDAY_SHORT_EN = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 const TRIAL_DAYS = 30;
 
 const phoneToEmail = (digits: string) => `${digits}@khinvoice.app`;
 
-type Screen = 'Install' | 'SignIn' | 'SignUp' | 'Home' | 'Finance' | 'InvoiceOverview' | 'Invoice' | 'Stock' | 'Account' | 'Report' | 'Customer' | 'Category';
+type Screen = 'Install' | 'SignIn' | 'SignUp' | 'Home' | 'Finance' | 'InvoiceOverview' | 'Invoice' | 'Stock' | 'Account' | 'Report' | 'Customer' | 'Category' | 'CustomerDebt' | 'SupplierDebt';
 
 interface Profile {
   id: string;
@@ -193,6 +190,12 @@ export default function App() {
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [invoiceCount, setInvoiceCount] = useState<number | null>(null);
   const [productCount, setProductCount] = useState<number | null>(null);
+  const [customerDebtUSD, setCustomerDebtUSD] = useState(0);
+  const [customerDebtKHR, setCustomerDebtKHR] = useState(0);
+  const [customerDebtCount, setCustomerDebtCount] = useState(0);
+  const [supplierDebtUSD, setSupplierDebtUSD] = useState(0);
+  const [supplierDebtKHR, setSupplierDebtKHR] = useState(0);
+  const [supplierDebtCount, setSupplierDebtCount] = useState(0);
   const [showSubscription, setShowSubscription] = useState(false);
   const [showTips, setShowTips] = useState(false);
   const [customUnits, setCustomUnits] = useState<string[]>([]);
@@ -340,6 +343,48 @@ export default function App() {
     ]);
     if (!invRes.error) setInvoiceCount(invRes.count ?? 0);
     if (!prodRes.error) setProductCount(prodRes.count ?? 0);
+
+    // Customers who still owe us (accounts receivable) — unpaid/partial invoices
+    const { data: debtInvoices, error: debtErr } = await supabase
+      .from('invoices')
+      .select('customer_id, subtotal, discount, paid_amount, currency')
+      .not('customer_id', 'is', null)
+      .neq('status', 'paid');
+    if (!debtErr && debtInvoices) {
+      let usd = 0;
+      let khr = 0;
+      const customerIds = new Set<string>();
+      for (const inv of debtInvoices as { customer_id: string; subtotal: number; discount: number; paid_amount: number; currency: string }[]) {
+        const remaining = Number(inv.subtotal) - Number(inv.discount) - Number(inv.paid_amount);
+        if (remaining <= 0.005) continue;
+        customerIds.add(inv.customer_id);
+        if (inv.currency === 'USD') usd += remaining;
+        else khr += remaining;
+      }
+      setCustomerDebtUSD(usd);
+      setCustomerDebtKHR(khr);
+      setCustomerDebtCount(customerIds.size);
+    }
+
+    // Suppliers we still owe (accounts payable) — purchases not fully paid
+    const { data: supplierRows, error: supplierErr } = await supabase
+      .from('supplier_debts')
+      .select('supplier_name, total_amount, paid_amount, currency');
+    if (!supplierErr && supplierRows) {
+      let usd = 0;
+      let khr = 0;
+      const supplierNames = new Set<string>();
+      for (const row of supplierRows as { supplier_name: string; total_amount: number; paid_amount: number; currency: string }[]) {
+        const remaining = Number(row.total_amount) - Number(row.paid_amount);
+        if (remaining <= 0.005) continue;
+        supplierNames.add(row.supplier_name);
+        if (row.currency === 'USD') usd += remaining;
+        else khr += remaining;
+      }
+      setSupplierDebtUSD(usd);
+      setSupplierDebtKHR(khr);
+      setSupplierDebtCount(supplierNames.size);
+    }
   };
 
   useEffect(() => {
@@ -467,33 +512,6 @@ export default function App() {
       : currentHour < 18
       ? 'Good afternoon'
       : 'Good evening';
-
-  // Last 7 days of cash flow for the Home screen "pulse" widget.
-  // Both currencies are folded into a single USD-equivalent figure
-  // (using the same exchange rate as the Exchange tool) purely to size
-  // the bars — the exact per-currency totals still live in the Balance
-  // and Monthly Statistics cards above.
-  const weeklyFlow = useMemo(() => {
-    const todayDate = new Date();
-    const days = Array.from({ length: 7 }, (_, idx) => {
-      const d = new Date(todayDate);
-      d.setDate(d.getDate() - (6 - idx));
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const dayTotals = computeTotals(transactions.filter((t) => t.transaction_date === key));
-      const incomeEq = dayTotals.incomeUSD + dayTotals.incomeKHR / exchangeRate;
-      const expenseEq = dayTotals.expenseUSD + dayTotals.expenseKHR / exchangeRate;
-      const labels = lang === 'KH' ? WEEKDAY_SHORT_KH : WEEKDAY_SHORT_EN;
-      return {
-        key,
-        label: labels[d.getDay()],
-        isToday: idx === 6,
-        net: incomeEq - expenseEq,
-      };
-    });
-    const maxAbs = Math.max(...days.map((d) => Math.abs(d.net)), 1);
-    const weekNet = days.reduce((acc, d) => acc + d.net, 0);
-    return { days, maxAbs, weekNet };
-  }, [transactions, lang]);
 
   const getRangeDates = () => {
     const today = new Date();
@@ -690,31 +708,41 @@ export default function App() {
 
   /* ---------- inline icon button (for header actions etc.) ---------- */
   const IconBtn = ({
-    icon,
+    icon: Icon,
     tint = 'navy',
     onClick,
+    size = 44,
     'aria-label': ariaLabel,
   }: {
     icon: LucideIcon;
     tint?: 'navy' | 'gold' | 'light' | 'stock' | 'invoice' | 'account';
     onClick?: () => void;
+    size?: number;
     'aria-label'?: string;
-  }) => (
-    <button
-      onClick={onClick}
-      aria-label={ariaLabel}
-      className="flex items-center justify-center"
-      style={{
-        width: 44,
-        height: 44,
-        borderRadius: 12,
-        backgroundColor: tint === 'light' ? 'rgba(255,255,255,0.18)' : '#FFFFFF',
-        border: tint === 'light' ? 'none' : `1px solid ${COLORS.border}`,
-      }}
-    >
-      <IconBadge icon={icon} size={INLINE} tint={tint} shape="rounded" />
-    </button>
-  );
+  }) => {
+    const compact = size <= 36;
+    const iconColor = tint === 'light' ? '#FFFFFF' : COLORS.navy;
+    return (
+      <button
+        onClick={onClick}
+        aria-label={ariaLabel}
+        className="flex items-center justify-center flex-shrink-0"
+        style={{
+          width: size,
+          height: size,
+          borderRadius: compact ? 10 : 12,
+          backgroundColor: tint === 'light' ? 'rgba(255,255,255,0.14)' : '#FFFFFF',
+          border: tint === 'light' ? 'none' : `1px solid ${COLORS.border}`,
+        }}
+      >
+        {compact ? (
+          <Icon size={16} color={iconColor} strokeWidth={2.2} />
+        ) : (
+          <IconBadge icon={Icon} size={INLINE} tint={tint} shape="rounded" />
+        )}
+      </button>
+    );
+  };
 
   if (loading) {
     return (
@@ -1564,9 +1592,9 @@ export default function App() {
                   <Languages size={14} color="#FFFFFF" strokeWidth={2} />
                   {lang === 'KH' ? 'ខ្មែរ' : 'EN'}
                 </button>
-                <IconBtn icon={HelpCircle} tint="light" aria-label={lang === 'KH' ? 'របៀបប្រើ' : 'How to use'} onClick={() => setShowTips(true)} />
-                <IconBtn icon={Bell} tint="light" aria-label="Notifications" onClick={() => setShowSubscription(true)} />
-                <IconBtn icon={LogOut} tint="light" onClick={handleLogout} aria-label="Logout" />
+                <IconBtn icon={HelpCircle} tint="light" size={32} aria-label={lang === 'KH' ? 'របៀបប្រើ' : 'How to use'} onClick={() => setShowTips(true)} />
+                <IconBtn icon={Bell} tint="light" size={32} aria-label="Notifications" onClick={() => setShowSubscription(true)} />
+                <IconBtn icon={LogOut} tint="light" size={32} onClick={handleLogout} aria-label="Logout" />
               </div>
             </div>
             <div className="relative flex items-center justify-between mt-3.5 gap-2">
@@ -1637,25 +1665,26 @@ export default function App() {
                with KHR as a secondary line, so the card reads at a glance
                instead of splitting attention across two equal numbers. */}
             <div
-              className="relative p-5 rounded-[22px] overflow-hidden"
+              className="relative p-4 rounded-[20px] overflow-hidden"
               style={{
                 background: `linear-gradient(135deg, ${COLORS.navyGradientStart}, ${COLORS.navyGradientEnd})`,
-                boxShadow: '0 8px 20px rgba(12,68,124,0.28), 0 2px 6px rgba(12,68,124,0.14)',
+                boxShadow: '0 6px 16px rgba(12,68,124,0.26), 0 2px 5px rgba(12,68,124,0.13)',
               }}
             >
               {/* trimmed-down decorative glow, kept subtle for a smaller card */}
               <div
                 className="absolute rounded-full pointer-events-none"
-                style={{ width: 110, height: 110, top: -40, right: -30, background: 'rgba(255,255,255,0.06)' }}
-              />
-              <div
-                className="absolute rounded-full pointer-events-none"
-                style={{ width: 60, height: 60, bottom: -20, right: 55, background: 'rgba(255,255,255,0.04)' }}
+                style={{ width: 90, height: 90, top: -32, right: -24, background: 'rgba(255,255,255,0.06)' }}
               />
 
               <div className="relative flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Wallet size={13} className="text-white/70" strokeWidth={2.2} />
+                <div className="flex items-center gap-2">
+                  <div
+                    className="flex items-center justify-center rounded-xl flex-shrink-0"
+                    style={{ width: 26, height: 26, backgroundColor: 'rgba(255,255,255,0.14)' }}
+                  >
+                    <Wallet size={13} className="text-white" strokeWidth={2.2} />
+                  </div>
                   <p className="text-[11px] font-semibold text-white/75 tracking-wide">
                     {lang === 'KH' ? 'សមតុល្យសរុប' : 'Total Balance'}
                   </p>
@@ -1664,33 +1693,33 @@ export default function App() {
                   onClick={() => setShowBalance((v) => !v)}
                   aria-label={lang === 'KH' ? 'លាក់/បង្ហាញសមតុល្យ' : 'Show/hide balance'}
                   className="flex items-center justify-center rounded-lg flex-shrink-0"
-                  style={{ width: 26, height: 26, background: 'rgba(255,255,255,0.14)' }}
+                  style={{ width: 24, height: 24, background: 'rgba(255,255,255,0.14)' }}
                 >
                   {showBalance ? (
-                    <Eye size={13} className="text-white" />
+                    <Eye size={12} className="text-white" />
                   ) : (
-                    <EyeOff size={13} className="text-white" />
+                    <EyeOff size={12} className="text-white" />
                   )}
                 </button>
               </div>
 
-              {/* Primary figure — USD, the currency most invoices settle in */}
-              <p
-                className="relative text-[26px] leading-tight font-extrabold text-white mt-2 truncate"
-                style={latinFont}
-              >
-                {showBalance
-                  ? `$${balanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                  : '••••••'}
-              </p>
-
-              {/* Secondary figure — KHR, one compact line so it stays legible
-                 without competing with the primary number */}
-              <div className="relative flex items-center gap-1 mt-1">
-                <span className="text-white/85 text-[11px] font-bold">៛</span>
-                <span className="text-white/70 text-xs font-semibold truncate" style={latinFont}>
-                  {showBalance ? `${balanceKHR.toLocaleString()} KHR` : '••••••'}
-                </span>
+              {/* Primary + secondary figures on one relaxed baseline so the
+                 card reads at a glance without feeling like two stacked rows */}
+              <div className="relative flex items-end justify-between gap-2 mt-2.5">
+                <p className="text-[23px] leading-tight font-extrabold text-white truncate" style={latinFont}>
+                  {showBalance
+                    ? `$${balanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : '••••••'}
+                </p>
+                <div
+                  className="flex items-center gap-1 px-2 py-1 rounded-full flex-shrink-0 mb-0.5"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+                >
+                  <span className="text-white/85 text-[10px] font-bold">៛</span>
+                  <span className="text-white/80 text-[11px] font-semibold truncate" style={latinFont}>
+                    {showBalance ? balanceKHR.toLocaleString() : '••••'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1739,50 +1768,78 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Income vs Expense bar chart */}
+                {/* Income vs Expense ring chart — donut style with a net
+                   figure at the center, plus a compact legend on the side */}
                 {(() => {
                   const activeTotals = homeStatsTab === 'today' ? todayTotals : monthTotals;
-                  const maxVal = Math.max(activeTotals.incomeUSD, activeTotals.expenseUSD, 1);
-                  const incomePct = Math.min(100, (activeTotals.incomeUSD / maxVal) * 100);
-                  const expensePct = Math.min(100, (activeTotals.expenseUSD / maxVal) * 100);
+                  const incomeEq = activeTotals.incomeUSD + activeTotals.incomeKHR / exchangeRate;
+                  const expenseEq = activeTotals.expenseUSD + activeTotals.expenseKHR / exchangeRate;
+                  const totalEq = incomeEq + expenseEq;
+                  const incomeShare = totalEq > 0 ? incomeEq / totalEq : 0;
+                  const netEq = incomeEq - expenseEq;
+                  const r = 30;
+                  const strokeW = 11;
+                  const circumference = 2 * Math.PI * r;
+                  const incomeLen = circumference * incomeShare;
                   return (
-                    <div className="space-y-3">
-                      <div>
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-xs font-semibold" style={{ color: COLORS.navy }}>
-                            {lang === 'KH' ? 'ចំណូល' : 'Income'}
-                          </span>
-                          <span className="text-xs font-bold" style={{ color: COLORS.success, ...latinFont }}>
+                    <div className="flex items-center gap-4">
+                      <div className="relative flex-shrink-0" style={{ width: 84, height: 84 }}>
+                        <svg width={84} height={84} viewBox="0 0 84 84">
+                          <circle cx={42} cy={42} r={r} fill="none" stroke={COLORS.dangerTint} strokeWidth={strokeW} />
+                          {incomeLen > 0.001 && (
+                            <circle
+                              cx={42}
+                              cy={42}
+                              r={r}
+                              fill="none"
+                              stroke="url(#homeIncomeRingGrad)"
+                              strokeWidth={strokeW}
+                              strokeDasharray={`${incomeLen} ${circumference - incomeLen}`}
+                              strokeLinecap="round"
+                              transform="rotate(-90 42 42)"
+                            />
+                          )}
+                          <defs>
+                            <linearGradient id="homeIncomeRingGrad" x1="0" y1="0" x2="1" y2="1">
+                              <stop offset="0%" stopColor="#34C77B" />
+                              <stop offset="100%" stopColor="#1F9D6B" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <p className="text-[8px] font-semibold" style={{ color: COLORS.muted }}>
+                            {lang === 'KH' ? 'នៅសល់' : 'Net'}
+                          </p>
+                          <p
+                            className="text-[11px] font-extrabold truncate"
+                            style={{ color: netEq >= 0 ? COLORS.success : COLORS.danger, ...latinFont }}
+                          >
+                            {netEq >= 0 ? '+' : '-'}${Math.abs(netEq).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: '#1F9D6B' }} />
+                            <span className="text-xs font-semibold truncate" style={{ color: COLORS.navy }}>
+                              {lang === 'KH' ? 'ចំណូល' : 'Income'}
+                            </span>
+                          </div>
+                          <span className="text-xs font-bold flex-shrink-0" style={{ color: COLORS.success, ...latinFont }}>
                             {formatMoney(activeTotals.incomeUSD, activeTotals.incomeKHR)}
                           </span>
                         </div>
-                        <div className="w-full h-2.5 rounded-full" style={{ backgroundColor: COLORS.successTint }}>
-                          <div
-                            className="h-2.5 rounded-full transition-all"
-                            style={{
-                              width: `${incomePct}%`,
-                              background: 'linear-gradient(90deg, #34C77B, #1F9D6B)',
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-xs font-semibold" style={{ color: COLORS.navy }}>
-                            {lang === 'KH' ? 'ចំណាយ' : 'Expense'}
-                          </span>
-                          <span className="text-xs font-bold" style={{ color: COLORS.danger, ...latinFont }}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS.danger }} />
+                            <span className="text-xs font-semibold truncate" style={{ color: COLORS.navy }}>
+                              {lang === 'KH' ? 'ចំណាយ' : 'Expense'}
+                            </span>
+                          </div>
+                          <span className="text-xs font-bold flex-shrink-0" style={{ color: COLORS.danger, ...latinFont }}>
                             {formatMoney(activeTotals.expenseUSD, activeTotals.expenseKHR)}
                           </span>
-                        </div>
-                        <div className="w-full h-2.5 rounded-full" style={{ backgroundColor: COLORS.dangerTint }}>
-                          <div
-                            className="h-2.5 rounded-full transition-all"
-                            style={{
-                              width: `${expensePct}%`,
-                              background: 'linear-gradient(90deg, #F0785C, #E5533D)',
-                            }}
-                          />
                         </div>
                       </div>
                     </div>
@@ -1827,74 +1884,79 @@ export default function App() {
               </div>
             </div>
 
-            {/* 7-day cash flow pulse — works for any type of business
-               (no dependency on named customers), and adds a trend view
-               the Home screen didn't have before */}
-            <div
-              className="p-4 rounded-2xl mt-3"
-              style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
-            >
-              <div className="flex items-center justify-between mb-3.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <IconBadge icon={Activity} size={INLINE} tint="invoice" shape="rounded" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold truncate" style={{ color: COLORS.navy }}>
-                      {lang === 'KH' ? 'ចរន្តសាច់ប្រាក់ ៧ថ្ងៃចុងក្រោយ' : '7-Day Cash Flow'}
-                    </p>
-                    <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
-                      {lang === 'KH' ? 'និន្នាការចំណូល-ចំណាយប្រចាំថ្ងៃ' : 'Daily income vs. expense trend'}
-                    </p>
-                  </div>
+            {/* Debts Overview — who owes us (customers) vs who we owe
+               (suppliers), each with a small button into the full
+               breakdown. Replaces the old 7-day cash flow pulse. */}
+            <p className="text-sm font-bold mt-5 mb-2.5" style={{ color: COLORS.navy }}>
+              {lang === 'KH' ? 'ប្រាក់ជំពាក់' : 'Debts Overview'}
+            </p>
+            <div className="space-y-2.5">
+              {/* Customers owe you */}
+              <div
+                className="p-3.5 rounded-2xl flex items-center gap-3"
+                style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
+              >
+                <IconBadge icon={HandCoins} size={INLINE} tint="success" shape="rounded" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate" style={{ color: COLORS.muted }}>
+                    {lang === 'KH' ? 'អតិថិជនជំពាក់យើង' : 'Customers owe you'}
+                  </p>
+                  <p className="text-base font-extrabold truncate" style={{ color: COLORS.success, ...latinFont }}>
+                    ${customerDebtUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {customerDebtKHR > 0 && (
+                      <span className="text-[11px] font-semibold ml-1" style={{ color: COLORS.muted }}>
+                        + {customerDebtKHR.toLocaleString()} ៛
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
+                    {lang === 'KH' ? `អតិថិជន ${customerDebtCount} នាក់` : `${customerDebtCount} customer${customerDebtCount === 1 ? '' : 's'}`}
+                  </p>
                 </div>
-                <div
-                  className="flex items-center gap-0.5 px-2 py-1 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: weeklyFlow.weekNet >= 0 ? COLORS.successTint : COLORS.dangerTint }}
+                <button
+                  onClick={() => setCurrentScreen('CustomerDebt')}
+                  className="flex items-center gap-0.5 px-2.5 py-1.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: COLORS.successTint }}
                 >
-                  {weeklyFlow.weekNet >= 0 ? (
-                    <ArrowUpRight size={12} color={COLORS.success} strokeWidth={2.5} />
-                  ) : (
-                    <ArrowDownRight size={12} color={COLORS.danger} strokeWidth={2.5} />
-                  )}
-                  <span
-                    className="text-[11px] font-bold"
-                    style={{ color: weeklyFlow.weekNet >= 0 ? COLORS.success : COLORS.danger, ...latinFont }}
-                  >
-                    ${Math.abs(weeklyFlow.weekNet).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  <span className="text-[11px] font-bold" style={{ color: COLORS.success }}>
+                    {lang === 'KH' ? 'មើល' : 'View'}
                   </span>
-                </div>
+                  <ChevronRight size={13} color={COLORS.success} strokeWidth={2.5} />
+                </button>
               </div>
 
-              <div className="flex items-end justify-between gap-1.5 h-14">
-                {weeklyFlow.days.map((d) => {
-                  const barHeight = Math.max(6, (Math.abs(d.net) / weeklyFlow.maxAbs) * 56);
-                  const positive = d.net >= 0;
-                  return (
-                    <div key={d.key} className="flex-1 h-full flex items-end justify-center">
-                      <div
-                        className="rounded-full"
-                        style={{
-                          width: 14,
-                          height: barHeight,
-                          background: positive
-                            ? 'linear-gradient(180deg, #34C77B, #1F9D6B)'
-                            : 'linear-gradient(180deg, #F0785C, #E5533D)',
-                          opacity: d.isToday ? 1 : 0.55,
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex justify-between gap-1.5 mt-1.5">
-                {weeklyFlow.days.map((d) => (
-                  <span
-                    key={d.key}
-                    className="flex-1 text-center text-[10px]"
-                    style={{ color: d.isToday ? COLORS.navy : COLORS.muted, fontWeight: d.isToday ? 700 : 500 }}
-                  >
-                    {d.label}
+              {/* You owe suppliers */}
+              <div
+                className="p-3.5 rounded-2xl flex items-center gap-3"
+                style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
+              >
+                <IconBadge icon={Store} size={INLINE} tint="danger" shape="rounded" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate" style={{ color: COLORS.muted }}>
+                    {lang === 'KH' ? 'យើងជំពាក់អ្នកផ្គត់ផ្គង់' : 'You owe suppliers'}
+                  </p>
+                  <p className="text-base font-extrabold truncate" style={{ color: COLORS.danger, ...latinFont }}>
+                    ${supplierDebtUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {supplierDebtKHR > 0 && (
+                      <span className="text-[11px] font-semibold ml-1" style={{ color: COLORS.muted }}>
+                        + {supplierDebtKHR.toLocaleString()} ៛
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
+                    {lang === 'KH' ? `អ្នកផ្គត់ផ្គង់ ${supplierDebtCount} កន្លែង` : `${supplierDebtCount} supplier${supplierDebtCount === 1 ? '' : 's'}`}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setCurrentScreen('SupplierDebt')}
+                  className="flex items-center gap-0.5 px-2.5 py-1.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: COLORS.dangerTint }}
+                >
+                  <span className="text-[11px] font-bold" style={{ color: COLORS.danger }}>
+                    {lang === 'KH' ? 'មើល' : 'View'}
                   </span>
-                ))}
+                  <ChevronRight size={13} color={COLORS.danger} strokeWidth={2.5} />
+                </button>
               </div>
             </div>
 
@@ -2782,6 +2844,20 @@ export default function App() {
          ============================================ */}
       {currentScreen === 'Category' && profile && (
         <CategoryScreen lang={lang} onBack={() => setCurrentScreen('Home')} />
+      )}
+
+      {/* ============================================
+         CUSTOMER DEBT (accounts receivable)
+         ============================================ */}
+      {currentScreen === 'CustomerDebt' && profile && (
+        <CustomerDebtScreen lang={lang} onBack={() => setCurrentScreen('Home')} />
+      )}
+
+      {/* ============================================
+         SUPPLIER DEBT (accounts payable)
+         ============================================ */}
+      {currentScreen === 'SupplierDebt' && profile && (
+        <SupplierDebtScreen lang={lang} onBack={() => setCurrentScreen('Home')} />
       )}
 
       {showSubscription && profile && (
