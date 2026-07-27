@@ -298,10 +298,40 @@ export default function InvoiceScreen({ lang, profile, onBack, editInvoiceId }: 
       return;
     }
 
+    // Auto-save into the Customer list — so typing a name + phone here is
+    // enough; no need to re-enter the same person by hand in Customers.
+    // Matches an existing customer by name first (case-insensitive) so we
+    // don't create duplicates, and fills in a missing phone number on an
+    // existing match instead of overwriting one that's already saved.
+    let resolvedCustomerId = customerId;
+    const typedName = customerName.trim();
+    const typedPhone = customerPhone.trim() || null;
+    if (!resolvedCustomerId && typedName) {
+      const existing = customers.find((c) => c.name.trim().toLowerCase() === typedName.toLowerCase());
+      if (existing) {
+        resolvedCustomerId = existing.id;
+        if (typedPhone && !existing.phone) {
+          await supabase.from('customers').update({ phone: typedPhone }).eq('id', existing.id);
+          setCustomers((prev) => prev.map((c) => (c.id === existing.id ? { ...c, phone: typedPhone } : c)));
+        }
+      } else {
+        const { data: newCustomer, error: custError } = await supabase
+          .from('customers')
+          .insert({ name: typedName, phone: typedPhone, user_id: userData.user.id })
+          .select('id, name, phone')
+          .maybeSingle();
+        if (!custError && newCustomer) {
+          resolvedCustomerId = newCustomer.id;
+          setCustomers((prev) => [...prev, newCustomer as { id: string; name: string; phone: string | null }]);
+        }
+      }
+      setCustomerId(resolvedCustomerId);
+    }
+
     const invoicePayload = {
-      customer_name: customerName.trim(),
-      customer_phone: customerPhone.trim() || null,
-      customer_id: customerId,
+      customer_name: typedName,
+      customer_phone: typedPhone,
+      customer_id: resolvedCustomerId,
       invoice_date: invoiceDate,
       due_date: dueDate || null,
       subtotal,
