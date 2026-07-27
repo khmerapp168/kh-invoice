@@ -1124,7 +1124,7 @@ export default function App() {
             <img
               src={logoFull}
               alt="KH Invoice — Digital Invoicing Solutions"
-              className="w-[240px] object-contain"
+              className="w-[195px] object-contain"
             />
             <span
               className="text-xs text-center mt-2 leading-relaxed max-w-[260px]"
@@ -1275,7 +1275,7 @@ export default function App() {
             <img
               src={logoFull}
               alt="KH Invoice — Digital Invoicing Solutions"
-              className="w-[240px] object-contain"
+              className="w-[195px] object-contain"
             />
             <span
               className="text-xs text-center mt-2 leading-relaxed max-w-[260px]"
