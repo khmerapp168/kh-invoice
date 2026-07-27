@@ -1257,6 +1257,9 @@ export default function App() {
             </span>
           </div>
 
+          {/* Auto-play feature highlights — same as Sign In */}
+          <AuthFeatureCarousel lang={lang} />
+
           <div
             className="w-full max-w-sm rounded-3xl overflow-hidden bg-white mt-4"
             style={{ boxShadow: '0 10px 28px rgba(24,41,62,0.10)', border: `1px solid ${COLORS.border}` }}
@@ -1498,6 +1501,15 @@ export default function App() {
                 </span>
               </button>
             </div>
+          </div>
+
+          <div className="w-full max-w-sm text-center mt-4">
+            <p className="text-[10px] font-medium" style={{ color: COLORS.muted }}>
+              Build By: Pang Sokheng
+            </p>
+            <p className="text-[9px] mt-0.5" style={{ color: COLORS.muted, opacity: 0.7 }}>
+              Support By: @Cluade.com
+            </p>
           </div>
         </div>
       )}
