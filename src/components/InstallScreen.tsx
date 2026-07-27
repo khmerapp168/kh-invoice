@@ -8,13 +8,11 @@ import {
   Share2,
   Plus,
   CheckCircle2,
-  Smartphone,
   Apple,
   ChevronRight,
   X,
 } from 'lucide-react';
 import { COLORS, khmerFont } from '../lib/theme';
-import { IconBadge } from './IconBadge';
 import logoFull from '../assets/logo-full.png';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -38,9 +36,7 @@ const FEATURES = [
     titleEn: 'Invoices',
     descKh: 'បង្កើត និងចែករំលែកវិក្កយបត្របានយ៉ាងងាយ',
     descEn: 'Create and share invoices effortlessly',
-    tint: 'invoice' as const,
-    color: COLORS.invoice,
-    tintBg: COLORS.invoiceTint,
+    gradient: 'linear-gradient(135deg, #4EA1E8, #2E86C1)',
   },
   {
     icon: Wallet,
@@ -48,9 +44,7 @@ const FEATURES = [
     titleEn: 'Finance',
     descKh: 'តាមដានចំណូល និងចំណាយតាមរយៈប្រាក់ USD/KHR',
     descEn: 'Track income & expenses in USD/KHR',
-    tint: 'success' as const,
-    color: COLORS.success,
-    tintBg: COLORS.successTint,
+    gradient: 'linear-gradient(135deg, #34C77B, #1F9D6B)',
   },
   {
     icon: Package,
@@ -58,9 +52,7 @@ const FEATURES = [
     titleEn: 'Stock',
     descKh: 'គ្រប់គ្រងស្តុកផលិតផលបានត្រឹមត្រូវ',
     descEn: 'Manage product stock accurately',
-    tint: 'stock' as const,
-    color: COLORS.stock,
-    tintBg: COLORS.stockTint,
+    gradient: 'linear-gradient(135deg, #22B491, #0F6E56)',
   },
   {
     icon: BarChart3,
@@ -68,9 +60,7 @@ const FEATURES = [
     titleEn: 'Reports',
     descKh: 'មើលស្ថិតិ និងទិន្នន័យអាជីវកម្ម',
     descEn: 'View business statistics and data',
-    tint: 'navy' as const,
-    color: COLORS.navy,
-    tintBg: COLORS.navyTint,
+    gradient: `linear-gradient(135deg, ${COLORS.accentGold}, ${COLORS.accentGoldDark})`,
   },
 ];
 
@@ -133,16 +123,20 @@ export default function InstallScreen({ lang, onLangToggle, onSignIn, onSignUp, 
     >
       {/* Decorative background blobs */}
       <div
-        className="absolute rounded-full"
-        style={{ width: 320, height: 320, top: -120, right: -100, background: 'rgba(255,255,255,0.05)' }}
-      />
-      <div
-        className="absolute rounded-full"
-        style={{ width: 240, height: 240, bottom: -80, left: -60, background: 'rgba(255,255,255,0.04)' }}
+        className="absolute rounded-full pointer-events-none"
+        style={{ width: 300, height: 300, top: -110, right: -90, background: 'rgba(255,255,255,0.05)' }}
       />
       <div
         className="absolute rounded-full pointer-events-none"
-        style={{ width: 260, height: 260, top: 80, left: -110, background: `radial-gradient(circle, ${COLORS.accentGold}22 0%, transparent 70%)` }}
+        style={{ width: 220, height: 220, bottom: -70, left: -60, background: 'rgba(255,255,255,0.04)' }}
+      />
+      <div
+        className="absolute rounded-full pointer-events-none"
+        style={{ width: 240, height: 240, top: 90, left: -100, background: `radial-gradient(circle, ${COLORS.accentGold}20 0%, transparent 70%)` }}
+      />
+      <div
+        className="absolute rounded-full pointer-events-none"
+        style={{ width: 180, height: 180, top: 260, right: -70, background: `radial-gradient(circle, ${COLORS.accentGold}14 0%, transparent 70%)` }}
       />
 
       {/* Top bar: language + skip */}
@@ -169,25 +163,26 @@ export default function InstallScreen({ lang, onLangToggle, onSignIn, onSignUp, 
 
       {/* Hero — logo lockup on a soft glow (not a flat white card) so the
          navy wordmark stays readable on this screen's dark gradient */}
-      <div className="flex flex-col items-center px-6 pt-5 pb-2 relative z-10">
-        <div className="relative flex items-center justify-center" style={{ width: 260, height: 150 }}>
+      <div className="flex flex-col items-center px-6 pt-6 pb-1 relative z-10">
+        <div className="relative flex items-center justify-center" style={{ width: 250, height: 140 }}>
           <div
             className="absolute rounded-full"
             style={{
-              width: 240,
-              height: 130,
-              background: 'radial-gradient(ellipse, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 45%, rgba(255,255,255,0) 75%)',
-              filter: 'blur(6px)',
+              width: 210,
+              height: 108,
+              background: 'radial-gradient(ellipse, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.35) 55%, rgba(255,255,255,0) 78%)',
+              filter: 'blur(10px)',
             }}
           />
           <img
             src={logoFull}
             alt="KH Invoice — Digital Invoicing Solutions"
-            className="relative w-[220px] object-contain"
+            className="relative w-[210px] object-contain"
+            style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.18))' }}
           />
         </div>
 
-        <p className="text-[12px] font-medium text-white/80 text-center leading-relaxed mt-2 max-w-[280px]">
+        <p className="text-[12.5px] font-medium text-white/80 text-center leading-relaxed mt-1 max-w-[280px]">
           {tr(
             'វិក្កយបត្រ និងគ្រប់គ្រងទិន្នន័យអាជីវកម្មគ្រប់ប្រភេទ',
             'Invoices & Business Data Management'
@@ -223,9 +218,9 @@ export default function InstallScreen({ lang, onLangToggle, onSignIn, onSignUp, 
             >
               <div
                 className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: 'rgba(255,255,255,0.16)' }}
+                style={{ background: f.gradient, boxShadow: '0 6px 14px rgba(0,0,0,0.22)' }}
               >
-                <f.icon size={28} color="#FFFFFF" strokeWidth={2} />
+                <f.icon size={26} color="#FFFFFF" strokeWidth={2.2} />
               </div>
               <div className="flex-1">
                 <p className="text-[15px] font-bold text-white leading-tight">
@@ -274,7 +269,10 @@ export default function InstallScreen({ lang, onLangToggle, onSignIn, onSignUp, 
             onClick={handleInstall}
             disabled={installing}
             className="w-full py-3.5 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2 disabled:opacity-60"
-            style={{ backgroundColor: COLORS.accentGold, boxShadow: `0 4px 14px ${COLORS.accentGoldDark}66` }}
+            style={{
+              background: `linear-gradient(135deg, ${COLORS.accentGold}, ${COLORS.accentGoldDark})`,
+              boxShadow: `0 6px 16px ${COLORS.accentGoldDark}55`,
+            }}
           >
             <Download size={18} color="#FFFFFF" strokeWidth={2.5} />
             {installing
