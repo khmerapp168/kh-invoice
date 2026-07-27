@@ -1564,7 +1564,28 @@ export default function App() {
               className="pointer-events-none absolute rounded-full"
               style={{ width: 110, height: 110, top: 20, left: -50, background: 'rgba(255,255,255,0.05)' }}
             />
+            {/* warm gold glow — a small touch of the brand's accent color so
+               the header isn't monochrome navy */}
+            <div
+              className="pointer-events-none absolute rounded-full"
+              style={{ width: 130, height: 130, bottom: -70, right: 30, background: `radial-gradient(circle, ${COLORS.accentGold}33, transparent 70%)` }}
+            />
+            {/* faint dotted texture for a bit of tactile polish */}
+            <svg
+              className="pointer-events-none absolute"
+              style={{ top: 4, right: 70, opacity: 0.35 }}
+              width="60"
+              height="34"
+              viewBox="0 0 60 34"
+            >
+              {[0, 1, 2].map((row) =>
+                [0, 1, 2, 3, 4, 5].map((col) => (
+                  <circle key={`${row}-${col}`} cx={col * 11 + 4} cy={row * 12 + 5} r={1.4} fill="rgba(255,255,255,0.5)" />
+                ))
+              )}
+            </svg>
             <div className="relative flex justify-between items-center">
+
               <div className="flex items-center flex-1 min-w-0">
                 {profile?.avatar_url ? (
                   <div
@@ -1676,6 +1697,12 @@ export default function App() {
                 className="absolute rounded-full pointer-events-none"
                 style={{ width: 90, height: 90, top: -32, right: -24, background: 'rgba(255,255,255,0.06)' }}
               />
+              {/* thin gold top edge — the one card on Home that gets the
+                 real accent-gold treatment, marking it as the hero figure */}
+              <div
+                className="absolute top-0 left-0 right-0 pointer-events-none"
+                style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.accentGold}, transparent 75%)`, opacity: 0.9 }}
+              />
 
               <div className="relative flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -1727,7 +1754,8 @@ export default function App() {
                important numbers (daily + monthly) are one tap apart */}
             <div className="mt-5">
               <div className="flex items-center justify-between mb-2.5">
-                <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
+                <p className="text-sm font-bold flex items-center gap-1.5" style={{ color: COLORS.navy }}>
+                  <span className="inline-block rounded-full" style={{ width: 4, height: 14, backgroundColor: COLORS.invoice }} />
                   {lang === 'KH' ? 'ទិន្នន័យសង្ខេប' : 'Overview'}
                 </p>
                 <div
@@ -1887,14 +1915,19 @@ export default function App() {
             {/* Debts Overview — who owes us (customers) vs who we owe
                (suppliers), each with a small button into the full
                breakdown. Replaces the old 7-day cash flow pulse. */}
-            <p className="text-sm font-bold mt-5 mb-2.5" style={{ color: COLORS.navy }}>
+            <p className="text-sm font-bold mt-5 mb-2.5 flex items-center gap-1.5" style={{ color: COLORS.navy }}>
+              <span className="inline-block rounded-full" style={{ width: 4, height: 14, backgroundColor: COLORS.accentGold }} />
               {lang === 'KH' ? 'ប្រាក់ជំពាក់' : 'Debts Overview'}
             </p>
             <div className="space-y-2.5">
               {/* Customers owe you */}
               <div
                 className="p-3.5 rounded-2xl flex items-center gap-3"
-                style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(12,68,124,0.08)',
+                  borderLeft: `3px solid ${COLORS.success}`,
+                }}
               >
                 <IconBadge icon={HandCoins} size={INLINE} tint="success" shape="rounded" />
                 <div className="flex-1 min-w-0">
@@ -1928,7 +1961,11 @@ export default function App() {
               {/* You owe suppliers */}
               <div
                 className="p-3.5 rounded-2xl flex items-center gap-3"
-                style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(12,68,124,0.08)',
+                  borderLeft: `3px solid ${COLORS.danger}`,
+                }}
               >
                 <IconBadge icon={Store} size={INLINE} tint="danger" shape="rounded" />
                 <div className="flex-1 min-w-0">
@@ -1963,7 +2000,8 @@ export default function App() {
             {/* Quick Actions — responsive grid so icons stay a
                comfortable size on any phone width, from compact
                iPhones up through the largest modern Android screens */}
-            <p className="text-sm font-bold mt-5 mb-2.5" style={{ color: COLORS.navy }}>
+            <p className="text-sm font-bold mt-5 mb-2.5 flex items-center gap-1.5" style={{ color: COLORS.navy }}>
+              <span className="inline-block rounded-full" style={{ width: 4, height: 14, backgroundColor: COLORS.success }} />
               {lang === 'KH' ? 'មុខងាររហ័ស' : 'Quick Actions'}
             </p>
             <div
@@ -2041,7 +2079,7 @@ export default function App() {
                   <button
                     key={action.key}
                     onClick={action.onClick}
-                    className="flex flex-col items-center min-w-0"
+                    className="flex flex-col items-center min-w-0 transition-transform active:scale-90"
                   >
                     <div
                       className="flex items-center justify-center rounded-2xl flex-shrink-0"
@@ -2067,7 +2105,8 @@ export default function App() {
             {/* Recent Transactions — short preview only; tap "see all"
                for the full, scrollable list */}
             <div className="flex items-center justify-between mt-5 mb-2">
-              <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
+              <p className="text-sm font-bold flex items-center gap-1.5" style={{ color: COLORS.navy }}>
+                <span className="inline-block rounded-full" style={{ width: 4, height: 14, backgroundColor: COLORS.invoice }} />
                 {lang === 'KH' ? 'ប្រតិបត្តិការចុងក្រោយ' : 'Recent Transactions'}
               </p>
               {transactions.length > 0 && (
