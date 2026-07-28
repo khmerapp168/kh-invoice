@@ -49,7 +49,7 @@ import { COLORS, khmerFont, latinFont, DEFAULT_UNITS } from './lib/theme';
 import InstallScreen from './components/InstallScreen';
 import FeatureBanner from './components/FeatureBanner';
 import AuthFeatureCarousel from './components/AuthFeatureCarousel';
-import logoFull from './assets/logo-full.png';
+import logoFull from './assets/logo-signin.png';
 
 
 
