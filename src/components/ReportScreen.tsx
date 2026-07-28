@@ -103,6 +103,10 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ReportData>(EMPTY_REPORT);
   const [printing, setPrinting] = useState(false);
+  // Which section to isolate when saving a section-only PDF — 'all' is
+  // the full report (the header button); the rest match the small
+  // per-section "Save PDF" buttons next to each section title.
+  const [printScope, setPrintScope] = useState<'all' | 'finance' | 'invoices' | 'stock' | 'category'>('all');
 
   const { start, end, label } = useMemo(() => {
     if (periodType === 'month') {
@@ -236,11 +240,15 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
     };
   }, [start, end]);
 
-  const handleSavePdf = () => {
+  const handleSavePdf = (scope: 'all' | 'finance' | 'invoices' | 'stock' | 'category' = 'all') => {
+    setPrintScope(scope);
     setPrinting(true);
-    // Let the print-only styles apply, then open the browser's Save-as-PDF dialog.
+    // Let the print-only styles (and, for a section-only export, the
+    // narrowed-down section list) apply, then open the browser's
+    // Save-as-PDF dialog.
     setTimeout(() => {
       window.print();
+      setPrintScope('all');
       setPrinting(false);
     }, 80);
   };
@@ -269,13 +277,13 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
           </p>
         </div>
         <button
-          onClick={handleSavePdf}
+          onClick={() => handleSavePdf('all')}
           disabled={loading || printing}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl"
           style={{ backgroundColor: COLORS.gold }}
         >
           <Download size={16} color="#FFFFFF" strokeWidth={2.2} />
-          <span className="text-white text-xs font-bold">{tr('រក្សាទុក PDF', 'Save PDF')}</span>
+          <span className="text-white text-xs font-bold">{tr('រក្សាទុកទាំងអស់', 'Save Full PDF')}</span>
         </button>
       </div>
 
@@ -347,9 +355,23 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
         ) : (
           <>
             {/* Finance section */}
-            <p className="text-sm font-bold mb-2" style={{ color: COLORS.navy }}>
-              {tr('ចំណូល / ចំណាយ', 'Income / Expense')}
-            </p>
+            {(printScope === 'all' || printScope === 'finance') && (
+              <>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
+                {tr('ចំណូល / ចំណាយ', 'Income / Expense')}
+              </p>
+              <button
+                onClick={() => handleSavePdf('finance')}
+                disabled={loading || printing}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg print:hidden flex-shrink-0"
+                style={{ backgroundColor: COLORS.goldTint }}
+                aria-label={tr('រក្សាទុក PDF', 'Save PDF')}
+              >
+                <Download size={11} color={COLORS.gold} strokeWidth={2.2} />
+                <span className="text-[10px] font-bold" style={{ color: COLORS.gold }}>PDF</span>
+              </button>
+            </div>
             <div className="grid grid-cols-3 gap-2 mb-4">
               <div className="p-3 rounded-xl bg-white" style={{ boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}>
                 <IconBadge icon={TrendingUp} size={INLINE} tint="success" shape="rounded" />
@@ -397,11 +419,27 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
                 </p>
               </div>
             )}
+              </>
+            )}
 
             {/* Invoice section */}
-            <p className="text-sm font-bold mb-2" style={{ color: COLORS.navy }}>
-              {tr('វិក្កយបត្រ', 'Invoices')}
-            </p>
+            {(printScope === 'all' || printScope === 'invoices') && (
+              <>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
+                {tr('វិក្កយបត្រ', 'Invoices')}
+              </p>
+              <button
+                onClick={() => handleSavePdf('invoices')}
+                disabled={loading || printing}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg print:hidden flex-shrink-0"
+                style={{ backgroundColor: COLORS.goldTint }}
+                aria-label={tr('រក្សាទុក PDF', 'Save PDF')}
+              >
+                <Download size={11} color={COLORS.gold} strokeWidth={2.2} />
+                <span className="text-[10px] font-bold" style={{ color: COLORS.gold }}>PDF</span>
+              </button>
+            </div>
             <div className="bg-white rounded-2xl p-3.5 mb-4" style={{ boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}>
               <div className="flex items-center gap-2 mb-2.5">
                 <IconBadge icon={Receipt} size={INLINE} tint="invoice" shape="rounded" />
@@ -433,11 +471,27 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
                 </span>
               </div>
             </div>
+              </>
+            )}
 
             {/* Stock section */}
-            <p className="text-sm font-bold mb-2" style={{ color: COLORS.navy }}>
-              {tr('ស្តុក', 'Stock')}
-            </p>
+            {(printScope === 'all' || printScope === 'stock') && (
+              <>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-bold" style={{ color: COLORS.navy }}>
+                {tr('ស្តុក', 'Stock')}
+              </p>
+              <button
+                onClick={() => handleSavePdf('stock')}
+                disabled={loading || printing}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg print:hidden flex-shrink-0"
+                style={{ backgroundColor: COLORS.goldTint }}
+                aria-label={tr('រក្សាទុក PDF', 'Save PDF')}
+              >
+                <Download size={11} color={COLORS.gold} strokeWidth={2.2} />
+                <span className="text-[10px] font-bold" style={{ color: COLORS.gold }}>PDF</span>
+              </button>
+            </div>
             <div className="grid grid-cols-2 gap-2 mb-2">
               <div className="p-3 rounded-xl bg-white" style={{ boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}>
                 <IconBadge icon={ArrowDownCircle} size={INLINE} tint="stock" shape="rounded" />
@@ -484,14 +538,28 @@ export default function ReportScreen({ lang, profile, onBack }: Props) {
                 ))}
               </div>
             )}
+              </>
+            )}
 
-            {data.expenseByCategory.length > 0 && (
+            {(printScope === 'all' || printScope === 'category') && data.expenseByCategory.length > 0 && (
               <div className="bg-white rounded-2xl p-3.5 mb-4" style={{ boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}>
-                <div className="flex items-center gap-2 mb-2">
-                  <IconBadge icon={Tag} size={INLINE} tint="danger" shape="rounded" />
-                  <p className="text-xs font-bold" style={{ color: COLORS.navy }}>
-                    {tr('ចំណាយតាមប្រភេទ', 'Expenses by Category')}
-                  </p>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <IconBadge icon={Tag} size={INLINE} tint="danger" shape="rounded" />
+                    <p className="text-xs font-bold" style={{ color: COLORS.navy }}>
+                      {tr('ចំណាយតាមប្រភេទ', 'Expenses by Category')}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleSavePdf('category')}
+                    disabled={loading || printing}
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg print:hidden flex-shrink-0"
+                    style={{ backgroundColor: COLORS.goldTint }}
+                    aria-label={tr('រក្សាទុក PDF', 'Save PDF')}
+                  >
+                    <Download size={11} color={COLORS.gold} strokeWidth={2.2} />
+                    <span className="text-[10px] font-bold" style={{ color: COLORS.gold }}>PDF</span>
+                  </button>
                 </div>
                 {data.expenseByCategory.map((c, i) => (
                   <div

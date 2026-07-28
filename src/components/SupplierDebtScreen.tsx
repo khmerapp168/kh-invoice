@@ -207,7 +207,7 @@ export default function SupplierDebtScreen({ lang, onBack }: Props) {
           <ArrowLeft size={INLINE} color="#FFFFFF" strokeWidth={2} />
         </button>
         <div className="flex-1 min-w-0">
-          <p className="text-white font-bold text-base">{tr('យើងជំពាក់អ្នកផ្គត់ផ្គង់', 'You Owe Suppliers')}</p>
+          <p className="text-white font-bold text-base">{tr('ត្រូវសងអ្នកផ្គត់ផ្គង់', 'Accounts Payable')}</p>
           <p className="text-white/70 text-xs">{tr('ការទិញសម្ភារៈ និងបំណុល', 'Purchases & payables')}</p>
         </div>
         <button
@@ -229,7 +229,7 @@ export default function SupplierDebtScreen({ lang, onBack }: Props) {
             <div className="flex items-center gap-2 mb-2">
               <IconBadge icon={Store} size={INLINE} tint="danger" shape="rounded" />
               <p className="text-xs font-semibold" style={{ color: COLORS.muted }}>
-                {tr('ប្រាក់ដែលយើងជំពាក់សរុប', 'Total you owe')}
+                {tr('សរុបប្រាក់ត្រូវសង', 'Total Payable')}
               </p>
             </div>
             <p className="text-2xl font-extrabold" style={{ color: COLORS.danger, ...latinFont }}>
