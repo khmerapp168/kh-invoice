@@ -285,16 +285,16 @@ export default function App() {
   const [homeStatsTab, setHomeStatsTab] = useState<'today' | 'month'>('today');
   const [financeShowAllTx, setFinanceShowAllTx] = useState(false);
 
-  // Home screen swipe carousel — tracks which of the 3 stat cards
-  // (Balance / Overview / Debts) is currently in view, for the dots.
+  // Home screen swipe carousel — Balance now sits above as its own
+  // standalone banner; this carousel just tracks Overview / Debts.
   const homeCarouselRef = useRef<HTMLDivElement>(null);
   const [homeCarouselIndex, setHomeCarouselIndex] = useState(0);
   const handleHomeCarouselScroll = () => {
     const el = homeCarouselRef.current;
     if (!el) return;
-    const slideWidth = el.scrollWidth / 3;
+    const slideWidth = el.scrollWidth / 2;
     const idx = Math.round(el.scrollLeft / slideWidth);
-    setHomeCarouselIndex(Math.max(0, Math.min(2, idx)));
+    setHomeCarouselIndex(Math.max(0, Math.min(1, idx)));
   };
 
   const loadProfile = async (userId: string): Promise<Profile | null> => {
@@ -1694,26 +1694,18 @@ export default function App() {
           <div className="relative flex-1 min-h-0 flex flex-col">
           <div className="px-3.5 pt-3.5">
           <div className="mx-auto w-full" style={{ maxWidth: 520 }}>
-            {/* Swipeable stat cards — Balance / Overview / Debts now sit
-               side-by-side; swipe left-right instead of stacking and
-               scrolling down to see them. */}
+            {/* Balance banner — standalone, full-width, compact hero at the
+               very top of Home. One clear primary figure (USD) with KHR as
+               a secondary pill, sized small-medium so it reads at a glance
+               without dominating the screen. */}
             <div
-              ref={homeCarouselRef}
-              onScroll={handleHomeCarouselScroll}
-              className="flex overflow-x-auto snap-x snap-mandatory gap-3 -mx-3.5 px-3.5 pb-1 no-scrollbar"
-            >
-              <div className="snap-center shrink-0" style={{ width: '86%' }}>
-            {/* Balance card — compact hero: one clear primary figure (USD)
-               with KHR as a secondary line, so the card reads at a glance
-               instead of splitting attention across two equal numbers. */}
-            <div
-              className="relative p-4 rounded-[20px] overflow-hidden h-full"
+              className="relative px-4 py-3.5 rounded-2xl overflow-hidden"
               style={{
                 background: `linear-gradient(135deg, ${COLORS.navyGradientStart}, ${COLORS.navyGradientEnd})`,
                 boxShadow: '0 6px 16px rgba(12,68,124,0.26), 0 2px 5px rgba(12,68,124,0.13)',
               }}
             >
-              {/* trimmed-down decorative glow, kept subtle for a smaller card */}
+              {/* trimmed-down decorative glow, kept subtle for a compact card */}
               <div
                 className="absolute rounded-full pointer-events-none"
                 style={{ width: 90, height: 90, top: -32, right: -24, background: 'rgba(255,255,255,0.06)' }}
@@ -1725,15 +1717,15 @@ export default function App() {
                 style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.accentGold}, transparent 75%)`, opacity: 0.9 }}
               />
 
-              <div className="relative flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div className="relative flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
                   <div
                     className="flex items-center justify-center rounded-xl flex-shrink-0"
                     style={{ width: 26, height: 26, backgroundColor: 'rgba(255,255,255,0.14)' }}
                   >
                     <Wallet size={13} className="text-white" strokeWidth={2.2} />
                   </div>
-                  <p className="text-[11px] font-semibold text-white/75 tracking-wide">
+                  <p className="text-[11px] font-semibold text-white/75 tracking-wide truncate">
                     {lang === 'KH' ? 'សមតុល្យសរុប' : 'Total Balance'}
                   </p>
                 </div>
@@ -1753,7 +1745,7 @@ export default function App() {
 
               {/* Primary + secondary figures on one relaxed baseline so the
                  card reads at a glance without feeling like two stacked rows */}
-              <div className="relative flex items-end justify-between gap-2 mt-2.5">
+              <div className="relative flex items-end justify-between gap-2 mt-2">
                 <p className="text-[23px] leading-tight font-extrabold text-white truncate" style={latinFont}>
                   {showBalance
                     ? `$${balanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -1770,8 +1762,14 @@ export default function App() {
                 </div>
               </div>
             </div>
-              </div>
 
+            {/* Swipeable stat cards — Overview / Debts sit side-by-side
+               below the balance banner; swipe left-right to see them. */}
+            <div
+              ref={homeCarouselRef}
+              onScroll={handleHomeCarouselScroll}
+              className="flex overflow-x-auto snap-x snap-mandatory gap-3 -mx-3.5 px-3.5 pb-1 no-scrollbar mt-3"
+            >
               <div className="snap-center shrink-0" style={{ width: '86%' }}>
             {/* Today / Month overview — segmented toggle so the most
                important numbers (daily + monthly) are one tap apart */}
@@ -2026,10 +2024,10 @@ export default function App() {
               </div>
             </div>
 
-            {/* Pagination dots — shows which of the 3 swipe cards
-               (Balance / Overview / Debts) is currently in view */}
+            {/* Pagination dots — shows which of the 2 swipe cards
+               (Overview / Debts) is currently in view */}
             <div className="flex justify-center items-center gap-1.5 mt-2 mb-1">
-              {[0, 1, 2].map((i) => (
+              {[0, 1].map((i) => (
                 <span
                   key={i}
                   className="rounded-full transition-all"
