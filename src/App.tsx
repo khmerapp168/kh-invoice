@@ -285,17 +285,6 @@ export default function App() {
   const [homeStatsTab, setHomeStatsTab] = useState<'today' | 'month'>('today');
   const [financeShowAllTx, setFinanceShowAllTx] = useState(false);
 
-  // Home screen swipe carousel — tracks which of the 3 stat cards
-  // (Balance / Overview / Debts) is currently in view, for the dots.
-  const homeCarouselRef = useRef<HTMLDivElement>(null);
-  const [homeCarouselIndex, setHomeCarouselIndex] = useState(0);
-  const handleHomeCarouselScroll = () => {
-    const el = homeCarouselRef.current;
-    if (!el) return;
-    const slideWidth = el.scrollWidth / 3;
-    const idx = Math.round(el.scrollLeft / slideWidth);
-    setHomeCarouselIndex(Math.max(0, Math.min(2, idx)));
-  };
 
   const loadProfile = async (userId: string): Promise<Profile | null> => {
     const { data, error } = await supabase
@@ -1694,26 +1683,18 @@ export default function App() {
           <div className="relative flex-1 min-h-0 flex flex-col">
           <div className="px-3.5 pt-3.5">
           <div className="mx-auto w-full" style={{ maxWidth: 520 }}>
-            {/* Swipeable stat cards — Balance / Overview / Debts now sit
-               side-by-side; swipe left-right instead of stacking and
-               scrolling down to see them. */}
+            {/* Balance banner — standalone, full-width, compact hero at the
+               very top of Home. One clear primary figure (USD) with KHR as
+               a secondary pill, sized small-medium so it reads at a glance
+               without dominating the screen. */}
             <div
-              ref={homeCarouselRef}
-              onScroll={handleHomeCarouselScroll}
-              className="flex overflow-x-auto snap-x snap-mandatory gap-3 -mx-3.5 px-3.5 pb-1 no-scrollbar"
-            >
-              <div className="snap-center shrink-0" style={{ width: '86%' }}>
-            {/* Balance card — compact hero: one clear primary figure (USD)
-               with KHR as a secondary line, so the card reads at a glance
-               instead of splitting attention across two equal numbers. */}
-            <div
-              className="relative p-4 rounded-[20px] overflow-hidden h-full"
+              className="relative px-4 py-3.5 rounded-2xl overflow-hidden"
               style={{
                 background: `linear-gradient(135deg, ${COLORS.navyGradientStart}, ${COLORS.navyGradientEnd})`,
                 boxShadow: '0 6px 16px rgba(12,68,124,0.26), 0 2px 5px rgba(12,68,124,0.13)',
               }}
             >
-              {/* trimmed-down decorative glow, kept subtle for a smaller card */}
+              {/* trimmed-down decorative glow, kept subtle for a compact card */}
               <div
                 className="absolute rounded-full pointer-events-none"
                 style={{ width: 90, height: 90, top: -32, right: -24, background: 'rgba(255,255,255,0.06)' }}
@@ -1725,15 +1706,15 @@ export default function App() {
                 style={{ height: 3, background: `linear-gradient(90deg, ${COLORS.accentGold}, transparent 75%)`, opacity: 0.9 }}
               />
 
-              <div className="relative flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div className="relative flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
                   <div
                     className="flex items-center justify-center rounded-xl flex-shrink-0"
                     style={{ width: 26, height: 26, backgroundColor: 'rgba(255,255,255,0.14)' }}
                   >
                     <Wallet size={13} className="text-white" strokeWidth={2.2} />
                   </div>
-                  <p className="text-[11px] font-semibold text-white/75 tracking-wide">
+                  <p className="text-[11px] font-semibold text-white/75 tracking-wide truncate">
                     {lang === 'KH' ? 'សមតុល្យសរុប' : 'Total Balance'}
                   </p>
                 </div>
@@ -1753,7 +1734,7 @@ export default function App() {
 
               {/* Primary + secondary figures on one relaxed baseline so the
                  card reads at a glance without feeling like two stacked rows */}
-              <div className="relative flex items-end justify-between gap-2 mt-2.5">
+              <div className="relative flex items-end justify-between gap-2 mt-2">
                 <p className="text-[23px] leading-tight font-extrabold text-white truncate" style={latinFont}>
                   {showBalance
                     ? `$${balanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -1770,12 +1751,10 @@ export default function App() {
                 </div>
               </div>
             </div>
-              </div>
 
-              <div className="snap-center shrink-0" style={{ width: '86%' }}>
             {/* Today / Month overview — segmented toggle so the most
                important numbers (daily + monthly) are one tap apart */}
-            <div className="h-full flex flex-col">
+            <div className="flex flex-col mt-3">
               <div className="flex items-center justify-between mb-2.5">
                 <p className="text-sm font-bold flex items-center gap-1.5" style={{ color: COLORS.navy }}>
                   <span className="inline-block rounded-full" style={{ width: 4, height: 14, backgroundColor: COLORS.invoice }} />
@@ -1934,113 +1913,6 @@ export default function App() {
                 </div>
               </div>
             </div>
-              </div>
-
-              <div className="snap-center shrink-0" style={{ width: '86%' }}>
-            {/* Debts Overview — who owes us (customers) vs who we owe
-               (suppliers), each with a small button into the full
-               breakdown. Replaces the old 7-day cash flow pulse. */}
-            <div className="h-full flex flex-col">
-            <p className="text-sm font-bold mb-2.5 flex items-center gap-1.5" style={{ color: COLORS.navy }}>
-              <span className="inline-block rounded-full" style={{ width: 4, height: 14, backgroundColor: COLORS.accentGold }} />
-              {lang === 'KH' ? 'ត្រូវទារ - ត្រូវសង' : 'Receivable - Payable'}
-            </p>
-            <div className="space-y-2.5 flex-1">
-              {/* Customers owe you */}
-              <div
-                className="p-3.5 rounded-2xl flex items-center gap-3"
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0 2px 8px rgba(12,68,124,0.08)',
-                  borderLeft: `3px solid ${COLORS.success}`,
-                }}
-              >
-                <IconBadge icon={HandCoins} size={INLINE} tint="success" shape="rounded" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold truncate" style={{ color: COLORS.muted }}>
-                    {lang === 'KH' ? 'ត្រូវទារពីអតិថិជន' : 'Receivable from customers'}
-                  </p>
-                  <p className="text-base font-extrabold truncate" style={{ color: COLORS.success, ...latinFont }}>
-                    ${customerDebtUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    {customerDebtKHR > 0 && (
-                      <span className="text-[11px] font-semibold ml-1" style={{ color: COLORS.muted }}>
-                        + {customerDebtKHR.toLocaleString()} ៛
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
-                    {lang === 'KH' ? `អតិថិជន ${customerDebtCount} នាក់` : `${customerDebtCount} customer${customerDebtCount === 1 ? '' : 's'}`}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setCurrentScreen('CustomerDebt')}
-                  className="flex items-center gap-0.5 px-2.5 py-1.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: COLORS.successTint }}
-                >
-                  <span className="text-[11px] font-bold" style={{ color: COLORS.success }}>
-                    {lang === 'KH' ? 'មើល' : 'View'}
-                  </span>
-                  <ChevronRight size={13} color={COLORS.success} strokeWidth={2.5} />
-                </button>
-              </div>
-
-              {/* You owe suppliers */}
-              <div
-                className="p-3.5 rounded-2xl flex items-center gap-3"
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  boxShadow: '0 2px 8px rgba(12,68,124,0.08)',
-                  borderLeft: `3px solid ${COLORS.danger}`,
-                }}
-              >
-                <IconBadge icon={Store} size={INLINE} tint="danger" shape="rounded" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold truncate" style={{ color: COLORS.muted }}>
-                    {lang === 'KH' ? 'ត្រូវសងអ្នកផ្គត់ផ្គង់' : 'Payable to suppliers'}
-                  </p>
-                  <p className="text-base font-extrabold truncate" style={{ color: COLORS.danger, ...latinFont }}>
-                    ${supplierDebtUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    {supplierDebtKHR > 0 && (
-                      <span className="text-[11px] font-semibold ml-1" style={{ color: COLORS.muted }}>
-                        + {supplierDebtKHR.toLocaleString()} ៛
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
-                    {lang === 'KH' ? `អ្នកផ្គត់ផ្គង់ ${supplierDebtCount} កន្លែង` : `${supplierDebtCount} supplier${supplierDebtCount === 1 ? '' : 's'}`}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setCurrentScreen('SupplierDebt')}
-                  className="flex items-center gap-0.5 px-2.5 py-1.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: COLORS.dangerTint }}
-                >
-                  <span className="text-[11px] font-bold" style={{ color: COLORS.danger }}>
-                    {lang === 'KH' ? 'មើល' : 'View'}
-                  </span>
-                  <ChevronRight size={13} color={COLORS.danger} strokeWidth={2.5} />
-                </button>
-              </div>
-            </div>
-            </div>
-              </div>
-            </div>
-
-            {/* Pagination dots — shows which of the 3 swipe cards
-               (Balance / Overview / Debts) is currently in view */}
-            <div className="flex justify-center items-center gap-1.5 mt-2 mb-1">
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  className="rounded-full transition-all"
-                  style={{
-                    width: homeCarouselIndex === i ? 16 : 6,
-                    height: 6,
-                    backgroundColor: homeCarouselIndex === i ? COLORS.gold : COLORS.border,
-                  }}
-                />
-              ))}
-            </div>
 
             {/* Quick Actions — always visible, no scrolling required.
                A tap-panel of buttons for every core function. */}
@@ -2148,85 +2020,146 @@ export default function App() {
           </div>
           </div>
 
-          {/* Recent Transactions — the only part of Home that scrolls,
-             and only within its own remaining space below the fixed
-             cards and quick actions above. */}
+          {/* Debt Summary — replaces the old Recent Transactions list.
+             The only part of Home that scrolls, and only within its own
+             remaining space below the fixed cards and quick actions above. */}
           <div className="flex-1 min-h-0 px-3.5 pb-24">
-          <div className="mx-auto w-full h-full flex flex-col" style={{ maxWidth: 520 }}>
+          <div className="mx-auto w-full h-full flex flex-col overflow-y-auto app-scroll" style={{ maxWidth: 520 }}>
             <div className="flex items-center justify-between mt-3 mb-2">
               <p className="text-sm font-bold flex items-center gap-1.5" style={{ color: COLORS.navy }}>
-                <span className="inline-block rounded-full" style={{ width: 4, height: 14, backgroundColor: COLORS.invoice }} />
-                {lang === 'KH' ? 'ប្រតិបត្តិការចុងក្រោយ' : 'Recent Transactions'}
+                <span className="inline-block rounded-full" style={{ width: 4, height: 14, backgroundColor: COLORS.accentGold }} />
+                {lang === 'KH' ? 'សង្ខេបបំណុល' : 'Debt Summary'}
               </p>
-              {transactions.length > 0 && (
-                <button
-                  onClick={() => setHomeShowAllTx(true)}
-                  className="flex items-center gap-0.5 text-[11px] font-bold"
-                  style={{ color: COLORS.gold }}
-                >
-                  {lang === 'KH' ? 'មើលទាំងអស់' : 'See all'}
-                  <ChevronRight size={13} color={COLORS.gold} strokeWidth={2.5} />
-                </button>
-              )}
+              <button
+                onClick={() => setHomeShowAllTx(true)}
+                className="flex items-center gap-0.5 text-[11px] font-bold flex-shrink-0"
+                style={{ color: COLORS.gold }}
+              >
+                {lang === 'KH' ? 'មើលប្រតិបត្តិការ' : 'View Transactions'}
+                <ChevronRight size={13} color={COLORS.gold} strokeWidth={2.5} />
+              </button>
             </div>
-            <div className="bg-white rounded-2xl py-1 flex-1 min-h-0 overflow-y-auto app-scroll" style={{ boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}>
-              {transactionsLoading && (
-                <p className="text-xs text-center py-4" style={{ color: COLORS.muted }}>
-                  {lang === 'KH' ? 'កំពុងផ្ទុក...' : 'Loading...'}
-                </p>
-              )}
-              {!transactionsLoading && transactions.length === 0 && (
-                <p className="text-xs text-center py-4" style={{ color: COLORS.muted }}>
-                  {lang === 'KH' ? 'មិនទាន់មានប្រតិបត្តិការនៅឡើយទេ' : 'No transactions yet'}
-                </p>
-              )}
-              {transactions.slice(0, 5).map((tItem, i, arr) => (
-                <div
-                  key={tItem.id}
-                  className="flex items-center px-3.5 py-2.5"
-                  style={{
-                    borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.border}` : 'none',
-                  }}
-                >
-                  <div className="mr-3">
-                    <IconBadge
-                      icon={tItem.type === 'income' ? TrendingUp : TrendingDown}
-                      size={INLINE}
-                      tint={tItem.type === 'income' ? 'success' : 'danger'}
-                      shape="rounded"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold truncate" style={{ color: COLORS.navy }}>
-                      {tItem.description}
-                    </p>
-                    <p className="text-xs truncate" style={{ color: COLORS.muted }}>
-                      {tItem.quantity} {tItem.unit} • {tItem.transaction_date}
-                    </p>
-                  </div>
-                  <span
-                    className="text-sm font-bold flex-shrink-0 ml-2"
-                    style={{
-                      color: tItem.type === 'income' ? COLORS.success : COLORS.danger,
-                      ...latinFont,
-                    }}
-                  >
-                    {moneyDisplay(tItem)}
-                  </span>
+
+            {/* Receivable / Payable — who owes us (customers) vs who we
+               owe (suppliers), each with a small button into the full
+               breakdown. */}
+            <div className="space-y-2.5">
+              {/* Customers owe you */}
+              <div
+                className="p-3.5 rounded-2xl flex items-center gap-3"
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(12,68,124,0.08)',
+                  borderLeft: `3px solid ${COLORS.success}`,
+                }}
+              >
+                <IconBadge icon={HandCoins} size={INLINE} tint="success" shape="rounded" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate" style={{ color: COLORS.muted }}>
+                    {lang === 'KH' ? 'ត្រូវទារពីអតិថិជន' : 'Receivable from customers'}
+                  </p>
+                  <p className="text-base font-extrabold truncate" style={{ color: COLORS.success, ...latinFont }}>
+                    ${customerDebtUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {customerDebtKHR > 0 && (
+                      <span className="text-[11px] font-semibold ml-1" style={{ color: COLORS.muted }}>
+                        + {customerDebtKHR.toLocaleString()} ៛
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
+                    {lang === 'KH' ? `អតិថិជន ${customerDebtCount} នាក់` : `${customerDebtCount} customer${customerDebtCount === 1 ? '' : 's'}`}
+                  </p>
                 </div>
-              ))}
-              {transactions.length > 5 && (
                 <button
-                  onClick={() => setHomeShowAllTx(true)}
-                  className="w-full flex items-center justify-center gap-1 py-2.5 text-xs font-bold"
-                  style={{ color: COLORS.navy, borderTop: `1px solid ${COLORS.border}` }}
+                  onClick={() => setCurrentScreen('CustomerDebt')}
+                  className="flex items-center gap-0.5 px-2.5 py-1.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: COLORS.successTint }}
                 >
-                  {lang === 'KH'
-                    ? `មើលទាំងអស់ (${toKhmerNumber(transactions.length)})`
-                    : `View all ${transactions.length}`}
-                  <ChevronRight size={13} color={COLORS.navy} strokeWidth={2.5} />
+                  <span className="text-[11px] font-bold" style={{ color: COLORS.success }}>
+                    {lang === 'KH' ? 'មើល' : 'View'}
+                  </span>
+                  <ChevronRight size={13} color={COLORS.success} strokeWidth={2.5} />
                 </button>
-              )}
+              </div>
+
+              {/* You owe suppliers */}
+              <div
+                className="p-3.5 rounded-2xl flex items-center gap-3"
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(12,68,124,0.08)',
+                  borderLeft: `3px solid ${COLORS.danger}`,
+                }}
+              >
+                <IconBadge icon={Store} size={INLINE} tint="danger" shape="rounded" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate" style={{ color: COLORS.muted }}>
+                    {lang === 'KH' ? 'ត្រូវសងអ្នកផ្គត់ផ្គង់' : 'Payable to suppliers'}
+                  </p>
+                  <p className="text-base font-extrabold truncate" style={{ color: COLORS.danger, ...latinFont }}>
+                    ${supplierDebtUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {supplierDebtKHR > 0 && (
+                      <span className="text-[11px] font-semibold ml-1" style={{ color: COLORS.muted }}>
+                        + {supplierDebtKHR.toLocaleString()} ៛
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
+                    {lang === 'KH' ? `អ្នកផ្គត់ផ្គង់ ${supplierDebtCount} កន្លែង` : `${supplierDebtCount} supplier${supplierDebtCount === 1 ? '' : 's'}`}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setCurrentScreen('SupplierDebt')}
+                  className="flex items-center gap-0.5 px-2.5 py-1.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: COLORS.dangerTint }}
+                >
+                  <span className="text-[11px] font-bold" style={{ color: COLORS.danger }}>
+                    {lang === 'KH' ? 'មើល' : 'View'}
+                  </span>
+                  <ChevronRight size={13} color={COLORS.danger} strokeWidth={2.5} />
+                </button>
+              </div>
+            </div>
+
+            {/* Payment & Others — quick shortcuts straight into the Record
+               Payment flow on each debt screen, so settling more of a
+               customer's balance (or marking them fully paid) takes one tap
+               from Home instead of navigating through the debt list first. */}
+            <p className="text-sm font-bold mt-4 mb-2.5 flex items-center gap-1.5" style={{ color: COLORS.navy }}>
+              <span className="inline-block rounded-full" style={{ width: 4, height: 14, backgroundColor: COLORS.invoice }} />
+              {lang === 'KH' ? 'ទូទាត់ & ផ្សេងៗ' : 'Payment & Others'}
+            </p>
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                onClick={() => setCurrentScreen('CustomerDebt')}
+                className="flex items-center gap-2.5 p-3 rounded-2xl text-left"
+                style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
+              >
+                <IconBadge icon={HandCoins} size={INLINE} tint="success" shape="rounded" />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold truncate" style={{ color: COLORS.navy }}>
+                    {lang === 'KH' ? 'ទូទាត់អតិថិជន' : 'Settle Customer'}
+                  </p>
+                  <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
+                    {lang === 'KH' ? 'បង់ប្រាក់ / សម្គាល់ថាបានទូទាត់' : 'Pay / mark as paid'}
+                  </p>
+                </div>
+              </button>
+              <button
+                onClick={() => setCurrentScreen('SupplierDebt')}
+                className="flex items-center gap-2.5 p-3 rounded-2xl text-left"
+                style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
+              >
+                <IconBadge icon={Store} size={INLINE} tint="danger" shape="rounded" />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold truncate" style={{ color: COLORS.navy }}>
+                    {lang === 'KH' ? 'ទូទាត់អ្នកផ្គត់ផ្គង់' : 'Settle Supplier'}
+                  </p>
+                  <p className="text-[10px] truncate" style={{ color: COLORS.muted }}>
+                    {lang === 'KH' ? 'បង់ប្រាក់បន្ថែម' : 'Pay more'}
+                  </p>
+                </div>
+              </button>
             </div>
           </div>
           </div>
