@@ -73,6 +73,8 @@ export default function CustomerDebtScreen({ lang, onBack }: Props) {
   const [settleModal, setSettleModal] = useState<InvoiceEntry | null>(null);
   const [settleCustomerName, setSettleCustomerName] = useState('');
   const [settleAmount, setSettleAmount] = useState('');
+  const [settleDate, setSettleDate] = useState('');
+  const [settleNote, setSettleNote] = useState('');
   const [settleBusy, setSettleBusy] = useState(false);
   const [settleError, setSettleError] = useState('');
 
@@ -173,6 +175,8 @@ export default function CustomerDebtScreen({ lang, onBack }: Props) {
     setSettleModal(inv);
     setSettleCustomerName(customerName);
     setSettleAmount(String(inv.remaining.toFixed(2)));
+    setSettleDate(new Date().toISOString().slice(0, 10));
+    setSettleNote('');
     setSettleError('');
   };
 
@@ -188,6 +192,10 @@ export default function CustomerDebtScreen({ lang, onBack }: Props) {
       setSettleError(tr('ចំនួនបានបង់លើសសរុប', 'Paid amount exceeds total'));
       return;
     }
+    if (!settleDate) {
+      setSettleError(tr('សូមជ្រើសរើសកាលបរិច្ឆេទ', 'Please choose a date'));
+      return;
+    }
     setSettleBusy(true);
 
     // Same pattern as the invoice list's Settle feature — insert into
@@ -196,7 +204,8 @@ export default function CustomerDebtScreen({ lang, onBack }: Props) {
     const { error } = await supabase.from('invoice_payments').insert({
       invoice_id: settleModal.id,
       amount,
-      payment_date: new Date().toISOString().slice(0, 10),
+      payment_date: settleDate,
+      note: settleNote.trim() || null,
     });
     if (error) {
       setSettleBusy(false);
@@ -210,11 +219,12 @@ export default function CustomerDebtScreen({ lang, onBack }: Props) {
     const newPaidTotal = settleModal.paid_amount + amount;
     await supabase.from('transactions').delete().eq('reference_id', settleModal.id).eq('source', 'invoice');
     if (userData.user && newPaidTotal > 0) {
+      const baseDesc = `${tr('វិក្កយបត្រ', 'Invoice')} #${settleModal.invoice_number} - ${settleCustomerName}`;
       await supabase.from('transactions').insert({
         user_id: userData.user.id,
         type: 'income',
-        transaction_date: new Date().toISOString().slice(0, 10),
-        description: `${tr('វិក្កយបត្រ', 'Invoice')} #${settleModal.invoice_number} - ${settleCustomerName}`,
+        transaction_date: settleDate,
+        description: settleNote.trim() ? `${baseDesc} (${settleNote.trim()})` : baseDesc,
         quantity: 1,
         unit: null,
         unit_price: newPaidTotal,
@@ -227,6 +237,8 @@ export default function CustomerDebtScreen({ lang, onBack }: Props) {
     setSettleBusy(false);
     setSettleModal(null);
     setSettleAmount('');
+    setSettleDate('');
+    setSettleNote('');
 
     const refreshed = await fetchDebts();
     // Keep the detail sheet open with fresh numbers, or close it if this
@@ -587,6 +599,29 @@ export default function CustomerDebtScreen({ lang, onBack }: Props) {
               value={settleAmount}
               onChange={(e) => setSettleAmount(e.target.value)}
               placeholder="0.00"
+              className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none mb-2"
+              style={inputStyle}
+            />
+
+            <label className="text-xs font-semibold block mb-1" style={{ color: COLORS.navy }}>
+              {tr('ថ្ងៃទូទាត់', 'Payment Date')}
+            </label>
+            <input
+              type="date"
+              value={settleDate}
+              onChange={(e) => setSettleDate(e.target.value)}
+              className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none mb-2"
+              style={inputStyle}
+            />
+
+            <label className="text-xs font-semibold block mb-1" style={{ color: COLORS.navy }}>
+              {tr('ការពិពណ៌នា (មិនចាំបាច់)', 'Description (optional)')}
+            </label>
+            <input
+              type="text"
+              value={settleNote}
+              onChange={(e) => setSettleNote(e.target.value)}
+              placeholder={tr('ឧ. បង់ប្រាក់បន្ថែម', 'e.g. Additional payment')}
               className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none mb-2"
               style={inputStyle}
             />

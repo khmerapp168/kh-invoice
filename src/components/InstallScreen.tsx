@@ -143,23 +143,14 @@ export default function InstallScreen({ lang, onLangToggle, onSignIn, onSignUp, 
         </button>
       </div>
 
-      {/* Hero — logo lockup on a soft glow (not a flat white card) so the
-         navy wordmark stays readable on this screen's dark gradient */}
+      {/* Hero — logo lockup sits directly on the gradient background,
+         no glow behind it, sized up for stronger visual presence */}
       <div className="flex flex-col items-center px-6 pt-6 pb-1 relative z-10">
-        <div className="relative flex items-center justify-center" style={{ width: 230, height: 128 }}>
-          <div
-            className="absolute rounded-full"
-            style={{
-              width: 196,
-              height: 100,
-              background: 'radial-gradient(ellipse, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.35) 55%, rgba(255,255,255,0) 78%)',
-              filter: 'blur(10px)',
-            }}
-          />
+        <div className="relative flex items-center justify-center" style={{ width: 260, height: 145 }}>
           <img
             src={logoFull}
             alt="KH Invoice — Digital Invoicing Solutions"
-            className="relative w-[195px] object-contain"
+            className="relative w-[230px] object-contain"
             style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.18))' }}
           />
         </div>
