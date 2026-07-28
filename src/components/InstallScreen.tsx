@@ -13,7 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { COLORS, khmerFont } from '../lib/theme';
-import logoFull from '../assets/logo-full.png';
+import logoFull from '../assets/logo-install.png';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
