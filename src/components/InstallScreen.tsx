@@ -121,6 +121,24 @@ export default function InstallScreen({ lang, onLangToggle, onSignIn, onSignUp, 
         ...khmerFont,
       }}
     >
+      {/* Decorative background blobs */}
+      <div
+        className="absolute rounded-full pointer-events-none"
+        style={{ width: 300, height: 300, top: -110, right: -90, background: 'rgba(255,255,255,0.05)' }}
+      />
+      <div
+        className="absolute rounded-full pointer-events-none"
+        style={{ width: 220, height: 220, bottom: -70, left: -60, background: 'rgba(255,255,255,0.04)' }}
+      />
+      <div
+        className="absolute rounded-full pointer-events-none"
+        style={{ width: 240, height: 240, top: 90, left: -100, background: `radial-gradient(circle, ${COLORS.accentGold}20 0%, transparent 70%)` }}
+      />
+      <div
+        className="absolute rounded-full pointer-events-none"
+        style={{ width: 180, height: 180, top: 260, right: -70, background: `radial-gradient(circle, ${COLORS.accentGold}14 0%, transparent 70%)` }}
+      />
+
       {/* Top bar: language + skip */}
       <div
         className="flex justify-between items-center px-4 relative z-10"
@@ -143,14 +161,23 @@ export default function InstallScreen({ lang, onLangToggle, onSignIn, onSignUp, 
         </button>
       </div>
 
-      {/* Hero — logo lockup sits directly on the gradient background,
-         no glow behind it, sized up for stronger visual presence */}
+      {/* Hero — logo lockup on a soft glow (not a flat white card) so the
+         navy wordmark stays readable on this screen's dark gradient */}
       <div className="flex flex-col items-center px-6 pt-6 pb-1 relative z-10">
-        <div className="relative flex items-center justify-center" style={{ width: 260, height: 145 }}>
+        <div className="relative flex items-center justify-center" style={{ width: 210, height: 118 }}>
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: 178,
+              height: 92,
+              background: 'radial-gradient(ellipse, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.35) 55%, rgba(255,255,255,0) 78%)',
+              filter: 'blur(10px)',
+            }}
+          />
           <img
             src={logoFull}
             alt="KH Invoice — Digital Invoicing Solutions"
-            className="relative w-[230px] object-contain"
+            className="relative w-[175px] object-contain"
             style={{ filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.18))' }}
           />
         </div>
