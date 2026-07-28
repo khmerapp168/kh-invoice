@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import type { CSSProperties } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -284,6 +284,18 @@ export default function App() {
   const [showBalance, setShowBalance] = useState(true);
   const [homeStatsTab, setHomeStatsTab] = useState<'today' | 'month'>('today');
   const [financeShowAllTx, setFinanceShowAllTx] = useState(false);
+
+  // Home screen swipe carousel — tracks which of the 3 stat cards
+  // (Balance / Overview / Debts) is currently in view, for the dots.
+  const homeCarouselRef = useRef<HTMLDivElement>(null);
+  const [homeCarouselIndex, setHomeCarouselIndex] = useState(0);
+  const handleHomeCarouselScroll = () => {
+    const el = homeCarouselRef.current;
+    if (!el) return;
+    const slideWidth = el.scrollWidth / 3;
+    const idx = Math.round(el.scrollLeft / slideWidth);
+    setHomeCarouselIndex(Math.max(0, Math.min(2, idx)));
+  };
 
   const loadProfile = async (userId: string): Promise<Profile | null> => {
     const { data, error } = await supabase
@@ -1676,17 +1688,26 @@ export default function App() {
             </div>
           )}
 
-          {/* Content — permanently locked, never drags up/down.
-             Use the "Transactions" pill above to see everything in
-             a dedicated, fully scrollable full-screen view. */}
-          <div className="relative flex-1 min-h-0">
-          <div className="app-scroll h-full overflow-y-auto overflow-x-hidden p-3.5 pb-24">
+          {/* Content — the top zone (swipe cards + quick actions) is fixed
+             and never needs a vertical scroll. Only the transaction list
+             at the bottom scrolls, and only within its own space. */}
+          <div className="relative flex-1 min-h-0 flex flex-col">
+          <div className="px-3.5 pt-3.5">
           <div className="mx-auto w-full" style={{ maxWidth: 520 }}>
+            {/* Swipeable stat cards — Balance / Overview / Debts now sit
+               side-by-side; swipe left-right instead of stacking and
+               scrolling down to see them. */}
+            <div
+              ref={homeCarouselRef}
+              onScroll={handleHomeCarouselScroll}
+              className="flex overflow-x-auto snap-x snap-mandatory gap-3 -mx-3.5 px-3.5 pb-1 no-scrollbar"
+            >
+              <div className="snap-center shrink-0" style={{ width: '86%' }}>
             {/* Balance card — compact hero: one clear primary figure (USD)
                with KHR as a secondary line, so the card reads at a glance
                instead of splitting attention across two equal numbers. */}
             <div
-              className="relative p-4 rounded-[20px] overflow-hidden"
+              className="relative p-4 rounded-[20px] overflow-hidden h-full"
               style={{
                 background: `linear-gradient(135deg, ${COLORS.navyGradientStart}, ${COLORS.navyGradientEnd})`,
                 boxShadow: '0 6px 16px rgba(12,68,124,0.26), 0 2px 5px rgba(12,68,124,0.13)',
@@ -1749,10 +1770,12 @@ export default function App() {
                 </div>
               </div>
             </div>
+              </div>
 
+              <div className="snap-center shrink-0" style={{ width: '86%' }}>
             {/* Today / Month overview — segmented toggle so the most
                important numbers (daily + monthly) are one tap apart */}
-            <div className="mt-5">
+            <div className="h-full flex flex-col">
               <div className="flex items-center justify-between mb-2.5">
                 <p className="text-sm font-bold flex items-center gap-1.5" style={{ color: COLORS.navy }}>
                   <span className="inline-block rounded-full" style={{ width: 4, height: 14, backgroundColor: COLORS.invoice }} />
@@ -1786,7 +1809,7 @@ export default function App() {
               </div>
 
               <div
-                className="p-4 rounded-2xl"
+                className="p-4 rounded-2xl flex-1 flex flex-col"
                 style={{ backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}
               >
                 <div className="flex items-center gap-2 mb-3.5">
@@ -1911,15 +1934,18 @@ export default function App() {
                 </div>
               </div>
             </div>
+              </div>
 
+              <div className="snap-center shrink-0" style={{ width: '86%' }}>
             {/* Debts Overview — who owes us (customers) vs who we owe
                (suppliers), each with a small button into the full
                breakdown. Replaces the old 7-day cash flow pulse. */}
-            <p className="text-sm font-bold mt-5 mb-2.5 flex items-center gap-1.5" style={{ color: COLORS.navy }}>
+            <div className="h-full flex flex-col">
+            <p className="text-sm font-bold mb-2.5 flex items-center gap-1.5" style={{ color: COLORS.navy }}>
               <span className="inline-block rounded-full" style={{ width: 4, height: 14, backgroundColor: COLORS.accentGold }} />
-              {lang === 'KH' ? 'ប្រាក់ជំពាក់' : 'Debts Overview'}
+              {lang === 'KH' ? 'ត្រូវទារ - ត្រូវសង' : 'Receivable - Payable'}
             </p>
-            <div className="space-y-2.5">
+            <div className="space-y-2.5 flex-1">
               {/* Customers owe you */}
               <div
                 className="p-3.5 rounded-2xl flex items-center gap-3"
@@ -1932,7 +1958,7 @@ export default function App() {
                 <IconBadge icon={HandCoins} size={INLINE} tint="success" shape="rounded" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold truncate" style={{ color: COLORS.muted }}>
-                    {lang === 'KH' ? 'អតិថិជនជំពាក់យើង' : 'Customers owe you'}
+                    {lang === 'KH' ? 'ត្រូវទារពីអតិថិជន' : 'Receivable from customers'}
                   </p>
                   <p className="text-base font-extrabold truncate" style={{ color: COLORS.success, ...latinFont }}>
                     ${customerDebtUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -1970,7 +1996,7 @@ export default function App() {
                 <IconBadge icon={Store} size={INLINE} tint="danger" shape="rounded" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold truncate" style={{ color: COLORS.muted }}>
-                    {lang === 'KH' ? 'យើងជំពាក់អ្នកផ្គត់ផ្គង់' : 'You owe suppliers'}
+                    {lang === 'KH' ? 'ត្រូវសងអ្នកផ្គត់ផ្គង់' : 'Payable to suppliers'}
                   </p>
                   <p className="text-base font-extrabold truncate" style={{ color: COLORS.danger, ...latinFont }}>
                     ${supplierDebtUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -1996,11 +2022,29 @@ export default function App() {
                 </button>
               </div>
             </div>
+            </div>
+              </div>
+            </div>
 
-            {/* Quick Actions — responsive grid so icons stay a
-               comfortable size on any phone width, from compact
-               iPhones up through the largest modern Android screens */}
-            <p className="text-sm font-bold mt-5 mb-2.5 flex items-center gap-1.5" style={{ color: COLORS.navy }}>
+            {/* Pagination dots — shows which of the 3 swipe cards
+               (Balance / Overview / Debts) is currently in view */}
+            <div className="flex justify-center items-center gap-1.5 mt-2 mb-1">
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="rounded-full transition-all"
+                  style={{
+                    width: homeCarouselIndex === i ? 16 : 6,
+                    height: 6,
+                    backgroundColor: homeCarouselIndex === i ? COLORS.gold : COLORS.border,
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Quick Actions — always visible, no scrolling required.
+               A tap-panel of buttons for every core function. */}
+            <p className="text-sm font-bold mt-3 mb-2.5 flex items-center gap-1.5" style={{ color: COLORS.navy }}>
               <span className="inline-block rounded-full" style={{ width: 4, height: 14, backgroundColor: COLORS.success }} />
               {lang === 'KH' ? 'មុខងាររហ័ស' : 'Quick Actions'}
             </p>
@@ -2101,10 +2145,15 @@ export default function App() {
                   </button>
                 ))}
             </div>
+          </div>
+          </div>
 
-            {/* Recent Transactions — short preview only; tap "see all"
-               for the full, scrollable list */}
-            <div className="flex items-center justify-between mt-5 mb-2">
+          {/* Recent Transactions — the only part of Home that scrolls,
+             and only within its own remaining space below the fixed
+             cards and quick actions above. */}
+          <div className="flex-1 min-h-0 px-3.5 pb-24">
+          <div className="mx-auto w-full h-full flex flex-col" style={{ maxWidth: 520 }}>
+            <div className="flex items-center justify-between mt-3 mb-2">
               <p className="text-sm font-bold flex items-center gap-1.5" style={{ color: COLORS.navy }}>
                 <span className="inline-block rounded-full" style={{ width: 4, height: 14, backgroundColor: COLORS.invoice }} />
                 {lang === 'KH' ? 'ប្រតិបត្តិការចុងក្រោយ' : 'Recent Transactions'}
@@ -2120,7 +2169,7 @@ export default function App() {
                 </button>
               )}
             </div>
-            <div className="bg-white rounded-2xl py-1" style={{ boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}>
+            <div className="bg-white rounded-2xl py-1 flex-1 min-h-0 overflow-y-auto app-scroll" style={{ boxShadow: '0 2px 8px rgba(12,68,124,0.08)' }}>
               {transactionsLoading && (
                 <p className="text-xs text-center py-4" style={{ color: COLORS.muted }}>
                   {lang === 'KH' ? 'កំពុងផ្ទុក...' : 'Loading...'}

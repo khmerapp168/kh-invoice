@@ -30,6 +30,18 @@
   overscroll-behavior: contain;
 }
 
+/* Hides the scrollbar on horizontally-swipeable card rows (e.g. the
+   Home screen's Balance/Overview/Debts carousel) while keeping the
+   swipe/scroll gesture itself fully functional. */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Keyboard lock: iOS Safari auto-zooms the whole page when a focused
    input's font-size is under 16px. Forcing 16px here (visual size is
    controlled separately in each component) stops that zoom-in/zoom-out
